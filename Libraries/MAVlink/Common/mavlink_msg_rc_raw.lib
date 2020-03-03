@@ -1,0 +1,59 @@
+/*** BeginHeader mavlink_msg_rc_raw */
+#define MAVLINK_MSG_ID_RC_CHANNELS_RAW 35
+void mavlink_msg_rc_raw(void);
+/*** EndHeader */
+void mavlink_msg_rc_raw(void)
+{
+   auto char pkt[22 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   unsigned int temp_uint_rc;
+
+   //paledon(Tx_led);
+   payload_length = 22;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_RC_CHANNELS_RAW; //Message ID
+
+    pkt[6] = 0x00; //ms
+    pkt[7] = 0x00;
+    pkt[8] = 0x00;
+    pkt[9] = 0x00;
+
+    //10000 = 100%
+    temp_uint_rc = (unsigned int)g_servos[PPM_VALUES].aileron;
+    memcpy(&pkt[10], &temp_uint_rc, sizeof(temp_uint_rc));
+    temp_uint_rc = (unsigned int)g_servos[PPM_VALUES].elevator;
+    memcpy(&pkt[12], &temp_uint_rc, sizeof(temp_uint_rc));
+    temp_uint_rc = (unsigned int)g_servos[PPM_VALUES].throttle;
+    memcpy(&pkt[14], &temp_uint_rc, sizeof(temp_uint_rc));
+    temp_uint_rc = (unsigned int)g_servos[PPM_VALUES].rudder;
+    memcpy(&pkt[16], &temp_uint_rc, sizeof(temp_uint_rc));
+
+    memset(&pkt[18],0, 2);  //not used currently rx channel 6 etc
+    memset(&pkt[20],0, 2);
+    memset(&pkt[22],0, 2);
+    memset(&pkt[24],0, 2);
+
+    pkt[26] = 0x00; // port one
+    pkt[27] = 0xFF; // RSSI
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_RC_CHANNELS_RAW],&checksum); //add seed
+    pkt[28] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[29] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_vfr_hud_send

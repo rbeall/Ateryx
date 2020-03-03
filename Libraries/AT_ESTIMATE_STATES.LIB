@@ -1,0 +1,214 @@
+/*** BeginHeader */
+#ifndef __AT_STATES_LIB
+#define __AT_STATES_LIB
+/*** EndHeader */
+
+/* START LIBRARY DESCRIPTION *********************************************
+
+
+END DESCRIPTION *********************************************************/
+
+/*** BeginHeader estimate_states */
+#define K_PHI 		-0.008
+#define K_THETA	-0.008
+#define K_PSI     -0.008
+#define K_PSI_GPS -0.008
+root void estimate_states(void);
+/*** EndHeader */
+
+root void estimate_states(void)
+{
+   float phi_meas;
+   float theta_meas;
+   float psi_meas;
+   float psi_gps_meas;
+
+   float phi_dot;
+   float theta_dot;
+   float psi_dot;
+
+   float phi_err;
+   float theta_err;
+   float psi_err;
+   float psi_gps_err;
+
+   float K_vg;
+   float K;
+   float K_nrm;
+
+   // subtract centripetal
+   if (m_floats[MF_INDICATED_AIRSPEED] <= 3.0)
+   	{
+      	m_floats[MF_AX_CORRECTED] = m_floats[MF_AX];
+         m_floats[MF_AY_CORRECTED] = m_floats[MF_AY];
+         m_floats[MF_AZ_CORRECTED] = m_floats[MF_AZ];
+
+      }
+   if (m_floats[MF_INDICATED_AIRSPEED] > 3.0)
+   	{
+   		m_floats[MF_AX_CORRECTED] = m_floats[MF_AX] -(m_floats[MF_INDICATED_AIRSPEED]*m_floats[MF_GYRO_Q]*sin(m_floats[MF_THETA])/GRAVITY);
+   		m_floats[MF_AY_CORRECTED] = m_floats[MF_AY] -(m_floats[MF_INDICATED_AIRSPEED]*(m_floats[MF_GYRO_R]*cos(m_floats[MF_THETA])-m_floats[MF_GYRO_P]*sin(m_floats[MF_THETA]))/GRAVITY);
+   		m_floats[MF_AZ_CORRECTED] = m_floats[MF_AZ] -(-(m_floats[MF_INDICATED_AIRSPEED]*m_floats[MF_GYRO_Q]*cos(m_floats[MF_THETA]))/GRAVITY);
+      }
+
+   // measured accel attitude
+   phi_meas = -atan2(m_floats[MF_AY_CORRECTED],-m_floats[MF_AZ_CORRECTED]);
+   theta_meas = atan2(m_floats[MF_AX_CORRECTED],(-m_floats[MF_AY_CORRECTED]*sin(m_floats[MF_PHI]) - m_floats[MF_AZ_CORRECTED]*cos(m_floats[MF_PHI])));
+   psi_meas = m_floats[MF_PSI_MAG];
+   psi_gps_meas = m_floats[MF_GPS_HEADING];
+
+
+   // estimated attitude
+   if (m_floats[MF_THETA] > 1.4835299 && m_floats[MF_THETA] < 1.6057029)      //catches tan singularity
+   	{
+      	m_floats[MF_THETA] = 1.48350;
+      }
+   if (m_floats[MF_THETA] < -1.4835299 && m_floats[MF_THETA] > -1.6057029)
+   	{
+      	m_floats[MF_THETA] = -1.48350;
+      }
+
+   phi_dot  = m_floats[MF_GYRO_P]+((m_floats[MF_GYRO_Q]*sin(m_floats[MF_PHI])+m_floats[MF_GYRO_R]*cos(m_floats[MF_PHI]))*tan(m_floats[MF_THETA]));
+   theta_dot = m_floats[MF_GYRO_Q]*cos(m_floats[MF_PHI])-m_floats[MF_GYRO_R]*sin(m_floats[MF_PHI]);
+   psi_dot = (m_floats[MF_GYRO_Q]*sin(m_floats[MF_PHI])+m_floats[MF_GYRO_R]*cos(m_floats[MF_PHI]))/cos(m_floats[MF_THETA]);
+   m_floats[MF_HEADING_RATE] = psi_dot;
+
+   m_floats[MF_PHI] += m_floats[MF_DT]*phi_dot;
+      if (m_floats[MF_PHI] > PI)                //keeps integration in bounds of nomenclature
+      	{
+         	m_floats[MF_PHI] = m_floats[MF_PHI] - TWOPI;
+         }
+      if (m_floats[MF_PHI] < -PI)
+      	{
+         	m_floats[MF_PHI] = m_floats[MF_PHI] + TWOPI;
+         }
+
+   m_floats[MF_THETA] += m_floats[MF_DT]*theta_dot;
+
+      if (m_floats[MF_THETA] > PIDIVTWO)
+      	{
+           	m_floats[MF_THETA] = PIDIVTWO - (m_floats[MF_THETA]-PIDIVTWO);
+         }
+      if (m_floats[MF_THETA] < -PIDIVTWO)
+      	{
+            m_floats[MF_THETA] = (-PIDIVTWO) + ((-PIDIVTWO)-m_floats[MF_THETA]);
+         }
+
+   m_floats[MF_PSI] += m_floats[MF_DT]*psi_dot;
+
+      if (m_floats[MF_PSI] > PI)
+      	{
+         	m_floats[MF_PSI] = m_floats[MF_PSI] - TWOPI;
+         }
+      if (m_floats[MF_PSI] < -PI)
+      	{
+         	m_floats[MF_PSI] = m_floats[MF_PSI] + TWOPI;
+         }
+    m_floats[MF_PSI_GPS] += m_floats[MF_DT]*psi_dot;
+
+      if (m_floats[MF_PSI_GPS] > PI)
+      	{
+         	m_floats[MF_PSI_GPS] = m_floats[MF_PSI_GPS] - TWOPI;
+         }
+      if (m_floats[MF_PSI_GPS] < -PI)
+      	{
+         	m_floats[MF_PSI_GPS] = m_floats[MF_PSI_GPS] + TWOPI;
+         }
+
+// Variable Gain Observer
+   phi_err =  m_floats[MF_PHI] - phi_meas;
+      if (phi_err < -PI)    //catches 180 flip at verticle
+      	{
+         	phi_err = TWOPI + phi_err;
+         }
+      if (phi_err > PI)
+      	{
+          	phi_err = phi_err - TWOPI;
+         }
+      if (phi_err >PI)      //saturates error blowing up at 90
+      	{
+           phi_err = PIDIVTWO;
+         }
+      if (phi_err <-PI)
+      	{
+           phi_err = -PIDIVTWO;
+         }
+
+   theta_err = m_floats[MF_THETA] - theta_meas;
+
+
+   psi_err = m_floats[MF_PSI] - psi_meas;
+   	if (psi_err < -PI)
+      	{
+         	psi_err = TWOPI + psi_err;
+         }
+      if (psi_err > PI)
+      	{
+          	psi_err = psi_err - TWOPI;
+         }
+      if (psi_err >PI)      //saturates error blowing up at 90
+      	{
+           psi_err = PIDIVTWO;
+         }
+      if (psi_err <-PI)
+      	{
+           psi_err = -PIDIVTWO;
+         }
+
+    psi_gps_err = m_floats[MF_PSI_GPS] - psi_gps_meas;
+   	if (psi_gps_err < -PI)
+      	{
+         	psi_gps_err = TWOPI + psi_gps_err;
+         }
+      if (psi_gps_err > PI)
+      	{
+          	psi_gps_err = psi_gps_err - TWOPI;
+         }
+      if (psi_gps_err >PI)      //saturates error blowing up at 90
+      	{
+           psi_gps_err = PIDIVTWO;
+         }
+      if (psi_gps_err <-PI)
+      	{
+           psi_gps_err = -PIDIVTWO;
+         }
+
+   //---------------
+
+   K_vg = 3.0;         //dewights accel update based on evident centripetal
+   K = 1/(1+K_vg*(fabs(m_floats[MF_GYRO_P])+fabs(m_floats[MF_GYRO_Q])+fabs(m_floats[MF_GYRO_R])));
+   K_nrm = sqrt(m_floats[MF_AX_CORRECTED]*m_floats[MF_AX_CORRECTED]+m_floats[MF_AY_CORRECTED]*m_floats[MF_AY_CORRECTED]+m_floats[MF_AZ_CORRECTED]*m_floats[MF_AZ_CORRECTED]);
+
+      if (K_nrm > 1.0)                  //cancels unmodeled u_dot,v_dot,w_dot
+        {
+        		K = K * (K_nrm*-2.0+3.0); // takes gain to zero for nomalized
+        }                             // gravity vectors past 0.5g & 1.5g
+      if (K_nrm < 1.0)
+      	{
+            K = K * (K_nrm*2.0-1.0);
+         }
+      if (K < 0.0)
+      	{
+            K = 0;
+         }
+
+   m_floats[MF_PHI] += K*K_PHI*phi_err;
+   m_floats[MF_THETA] += K*K_THETA*theta_err;
+   m_floats[MF_PSI] += K_PSI*psi_err;  //gyro smoothed mag heading
+   m_floats[MF_PSI_GPS] += K_PSI_GPS*psi_gps_err; //gyro smoothed gps course over ground
+
+   m_floats[MF_TRUE_PSI] = m_floats[MF_PSI] + ram_UAV_limits[UL_MAG_DECLINATION]; //magnetic heading converted to true
+   if (m_floats[MF_TRUE_PSI] < -PI)
+      	{
+         	m_floats[MF_TRUE_PSI] = TWOPI + m_floats[MF_TRUE_PSI];
+         }
+   if (m_floats[MF_TRUE_PSI] > PI)
+      	{
+          	m_floats[MF_TRUE_PSI] = m_floats[MF_TRUE_PSI] - TWOPI;
+         }
+}//end estimate_states
+
+
+/*** BeginHeader */
+#endif
+/*** EndHeader */

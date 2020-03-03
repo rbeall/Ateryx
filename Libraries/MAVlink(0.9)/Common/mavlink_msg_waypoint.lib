@@ -1,0 +1,95 @@
+/*** BeginHeader mavlink_msg_waypoint_send */
+#define MAVLINK_MSG_ID_WAYPOINT 39
+void mavlink_msg_waypoint_send(unsigned int cmd_index);
+/*** EndHeader */
+void mavlink_msg_waypoint_send(unsigned int cmd_index)
+{
+   auto char pkt[36 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   char float_tmp[4];
+
+   //paledon(Tx_led);
+   payload_length = 36;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_WAYPOINT; //Message ID
+
+    pkt[6] = mavlink_system.sysid; ///< System ID
+    pkt[7] = mavlink_system.compid; ///< Component ID
+
+    memcpy(&pkt[8], &cmd_index,2);
+    //pkt[8] = packet[2]; ///< waypoint Sequence
+    //pkt[9] = packet[3];
+
+    pkt[10] = MAV_FRAME_GLOBAL; ///< The coordinate system of the waypoint. see MAV_FRAME in mavlink_types.h
+    memcpy(&pkt[11],&g_cmds[cmd_index].cmd_type,1);
+    //pkt[11] = packet[5]; ///< The scheduled action for the waypoint. see MAV_COMMAND in common.xml MAVLink specs
+    pkt[12] = 0; ///< current waypoint false:0, true:1
+    if((g_cmd_stack.previous_cmd_number+1) == cmd_index)
+    	{
+        	pkt[12] = 1;
+      }
+    pkt[13] = 1; ///< autocontinue to next wp
+
+    //memcpy(float_tmp, &m_floats[MF_PARAM1], sizeof(m_floats[MF_PARAM1]));
+    memcpy(&pkt[14],&g_cmds[cmd_index].payload,4);
+    memcpy(&pkt[18],&g_cmds[cmd_index].loiter_time,4);
+    memcpy(&pkt[22],&g_cmds[cmd_index].loiter_rad,4);
+    memcpy(&pkt[26],&g_cmds[cmd_index].vel,4);
+    memcpy(&pkt[30],&g_cmds[cmd_index].lat,4);
+    memcpy(&pkt[34],&g_cmds[cmd_index].lon,4);
+    memcpy(&pkt[38],&g_cmds[cmd_index].alt,4);
+
+    /*pkt[14] = packet[8];//float_tmp[3];
+    pkt[15] = packet[9];//float_tmp[2];
+    pkt[16] = packet[10];//float_tmp[1];
+    pkt[17] = packet[11];//float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_PARAM2], sizeof(m_floats[MF_PARAM2]));
+    pkt[18] = packet[12];//float_tmp[3];
+    pkt[19] = packet[13];//float_tmp[2];
+    pkt[20] = packet[14];//float_tmp[1];
+    pkt[21] = packet[15];//float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_PARAM3], sizeof(m_floats[MF_PARAM3]));
+    pkt[22] = packet[16];//float_tmp[3];
+    pkt[23] = packet[17];//float_tmp[2];
+    pkt[24] = packet[18];//float_tmp[1];
+    pkt[25] = packet[19];//float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_PARAM4], sizeof(m_floats[MF_PARAM4]));
+    pkt[26] = packet[20];//float_tmp[3];
+    pkt[27] = packet[21];//float_tmp[2];
+    pkt[28] = packet[22];//float_tmp[1];
+    pkt[29] = packet[23];//float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_WYPT_X], sizeof(m_floats[MF_WYPT_X]));
+    pkt[30] = packet[24];//float_tmp[3];
+    pkt[31] = packet[25];//float_tmp[2];
+    pkt[32] = packet[26];//float_tmp[1];
+    pkt[33] = packet[27];//float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_WYPT_Y], sizeof(m_floats[MF_WYPT_Y]));
+    pkt[34] = packet[28];//float_tmp[3];
+    pkt[35] = packet[29];//float_tmp[2];
+    pkt[36] = packet[30];//float_tmp[1];
+    pkt[37] = packet[31];//float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_WYPT_Z], sizeof(m_floats[MF_WYPT_Z]));
+    pkt[38] = packet[32];//float_tmp[3];
+    pkt[39] = packet[33];//float_tmp[2];
+    pkt[40] = packet[34];//float_tmp[1];
+    pkt[41] = packet[35];//float_tmp[0];
+   */
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    pkt[42] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[43] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+    for(i = 0; i < (payload_length + 8); i++)
+	{
+		serFputc(pkt[i]);
+	}
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_waypoint_send

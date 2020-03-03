@@ -1,0 +1,43 @@
+/*** BeginHeader mavlink_msg_gps_global_origin_send */
+#define MAVLINK_MSG_ID_GPS_GLOBAL_ORIGIN 49
+void mavlink_msg_gps_global_origin_send(void);
+/*** EndHeader */
+void mavlink_msg_gps_global_origin_send(void)
+{
+   auto char pkt[12 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   long temp_long_gps;
+
+   //paledon(Tx_led);
+   payload_length = 12;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_GPS_GLOBAL_ORIGIN; //Message ID
+
+    	temp_long_gps = (long)(m_floats[MF_GPS_LAT]*1000);
+    memcpy(&pkt[6], &temp_long_gps, 4);
+    	temp_long_gps = (long)(m_floats[MF_GPS_LON]*1000);
+    memcpy(&pkt[10], &temp_long_gps, 4);
+    	temp_long_gps = (long)(m_floats[MF_ALT_MSL]*1000);
+    memcpy(&pkt[14], &temp_long_gps, 4);
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_GPS_GLOBAL_ORIGIN],&checksum); //add seed
+    pkt[18] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[19] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_gps_global_origin_send

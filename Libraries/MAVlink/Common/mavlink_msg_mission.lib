@@ -1,0 +1,57 @@
+/*** BeginHeader mavlink_msg_mission_send */
+#define MAVLINK_MSG_ID_MISSION_ITEM 39
+void mavlink_msg_mission_send(unsigned int cmd_index);
+/*** EndHeader */
+void mavlink_msg_mission_send(unsigned int cmd_index)
+{
+   auto char pkt[37 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   char float_tmp[4];
+
+   //paledon(Tx_led);
+   payload_length = 37;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_MISSION_ITEM; //Message ID
+
+    memcpy(&pkt[6],&g_cmds[cmd_index].param1,4);
+    memcpy(&pkt[10],&g_cmds[cmd_index].param2,4);
+    memcpy(&pkt[14],&g_cmds[cmd_index].param3,4);
+    memcpy(&pkt[18],&g_cmds[cmd_index].param4,4);
+    memcpy(&pkt[22],&g_cmds[cmd_index].x,4);
+    memcpy(&pkt[26],&g_cmds[cmd_index].y,4);
+    memcpy(&pkt[30],&g_cmds[cmd_index].z,4);
+    memcpy(&pkt[34],&g_cmds[cmd_index].seq,2);
+    memcpy(&pkt[36],&g_cmds[cmd_index].command,2);
+
+    pkt[38] = g_mavlink_target_sysid; ///< System ID
+    pkt[39] = g_mavlink_target_compid; ///< Component ID
+
+    memcpy(&pkt[40],&g_cmds[cmd_index].frame,1);
+    pkt[41] = 0; ///< current waypoint false:0, true:1
+    if((g_cmd_stack.previous_cmd_number+1) == cmd_index)
+    	{
+        	pkt[41] = 1;
+      }
+    memcpy(&pkt[42],&g_cmds[cmd_index].autocontinue,1);
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_MISSION_ITEM],&checksum); //add seed
+    pkt[43] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[44] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_waypoint_send

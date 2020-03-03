@@ -1,0 +1,256 @@
+/*** BeginHeader send_param_list */
+//#define NUM_PARAMS 4
+#define PARAM_ID_LENGTH 16
+xmem void send_param_list(unsigned int start_index);
+/*** EndHeader */
+xmem void send_param_list(unsigned int start_index)
+{
+   auto char msg_status_txt[PARAM_ID_LENGTH];
+   auto int param_index;
+   auto float temp_float;
+
+   switch (start_index)
+   	{
+      	case PITCH_KP:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","PITCH_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_pitch].kp, sizeof(g_PIDS[PID_pitch].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,PITCH_KP);
+               break;
+            }
+         case PITCH_KI:
+         	{
+         	   snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","PITCH_KI");
+	            memcpy(&temp_float, &g_PIDS[PID_pitch].ki, sizeof(g_PIDS[PID_pitch].ki));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,PITCH_KI);
+               break;
+            }
+         case PITCH_LIM:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","PITCH_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_pitch].effort_limit, sizeof(g_PIDS[PID_pitch].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,PITCH_LIM);
+               break;
+            }
+          case PITCH_RATE_KP:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","PITCH_RATE_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_pitch_rate].kp, sizeof(g_PIDS[PID_pitch_rate].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,PITCH_RATE_KP);
+               break;
+            }
+          case PITCH_RATE_LIM:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","PITCH_RATE_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_pitch_rate].effort_limit, sizeof(g_PIDS[PID_pitch_rate].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,PITCH_RATE_LIM);
+             	break;
+            }
+          case ROLL_KP:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ROLL_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_roll].kp, sizeof(g_PIDS[PID_roll].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ROLL_KP);
+             	break;
+            }
+          case ROLL_KI:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ROLL_KI");
+	            memcpy(&temp_float, &g_PIDS[PID_roll].ki, sizeof(g_PIDS[PID_roll].ki));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ROLL_KI);
+            	break;
+            }
+          case ROLL_LIM:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ROLL_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_roll].effort_limit, sizeof(g_PIDS[PID_roll].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ROLL_LIM);
+            	break;
+            }
+          case ROLL_RATE_KP:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ROLL_RATE_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_roll_rate].kp, sizeof(g_PIDS[PID_roll_rate].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ROLL_RATE_KP);
+             	break;
+            }
+          case ROLL_RATE_LIM:
+         	{
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ROLL_RATE_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_roll_rate].effort_limit, sizeof(g_PIDS[PID_roll_rate].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ROLL_RATE_LIM);
+               break;
+            }
+           case YAW_RATE_KP:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","YAW_RATE_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_yaw_rate].kp, sizeof(g_PIDS[PID_yaw_rate].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,YAW_RATE_KP);
+               break;
+            }
+           case YAW_RATE_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","YAW_RATE_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_yaw_rate].effort_limit, sizeof(g_PIDS[PID_yaw_rate].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,YAW_RATE_LIM);
+               break;
+            }
+           case HDG_KP:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","HDG_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_heading].kp, sizeof(g_PIDS[PID_heading].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,HDG_KP);
+                break;
+            }
+           case HDG_KD:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","HDG_KD");
+	            memcpy(&temp_float, &g_PIDS[PID_heading].kd, sizeof(g_PIDS[PID_heading].kd));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,HDG_KD);
+               break;
+            }
+           case HDG_KI:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","HDG_KI");
+	            memcpy(&temp_float, &g_PIDS[PID_heading].ki, sizeof(g_PIDS[PID_heading].ki));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,HDG_KI);
+               break;
+            }
+           case HDG_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","HDG_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_heading].effort_limit, sizeof(g_PIDS[PID_heading].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,HDG_LIM);
+               break;
+            }
+           case ARSPD_KP:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ARSPD_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_airspeed].kp, sizeof(g_PIDS[PID_airspeed].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ARSPD_KP);
+               break;
+            }
+           case ARSPD_KD:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ARSPD_KD");
+	            memcpy(&temp_float, &g_PIDS[PID_airspeed].kd, sizeof(g_PIDS[PID_airspeed].kd));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ARSPD_KD);
+               break;
+            }
+           case ARSPD_KI:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ARSPD_KI");
+	            memcpy(&temp_float, &g_PIDS[PID_airspeed].ki, sizeof(g_PIDS[PID_airspeed].ki));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ARSPD_KI);
+               break;
+            }
+           case ARSPD_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ARSPD_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_airspeed].effort_limit, sizeof(g_PIDS[PID_airspeed].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ARSPD_LIM);
+               break;
+            }
+           case EH_KP:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","EH_KP");
+	            memcpy(&temp_float, &g_PIDS[PID_energy_height].kp, sizeof(g_PIDS[PID_energy_height].kp));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,EH_KP);
+               break;
+            }
+           case EH_KD:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","EH_KD");
+	            memcpy(&temp_float, &g_PIDS[PID_energy_height].kd, sizeof(g_PIDS[PID_energy_height].kd));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,EH_KD);
+               break;
+            }
+           case EH_KI:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","EH_KI");
+	            memcpy(&temp_float, &g_PIDS[PID_energy_height].ki, sizeof(g_PIDS[PID_energy_height].ki));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,EH_KI);
+               break;
+            }
+           case EH_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","EH_LIM");
+	            memcpy(&temp_float, &g_PIDS[PID_energy_height].effort_limit, sizeof(g_PIDS[PID_energy_height].effort_limit));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,EH_LIM);
+               break;
+            }
+           case EH_RANGE:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","EH_RANGE");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_EH_RANGE], sizeof(ram_UAV_limits[UL_EH_RANGE]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,EH_RANGE);
+               break;
+             }
+           case ROLL_L_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ROLL_L_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_PHI_LOWER_LIMIT], sizeof(ram_UAV_limits[UL_PHI_LOWER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ROLL_L_LIM);
+               break;
+             }
+          case ROLL_U_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ROLL_U_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_PHI_UPPER_LIMIT], sizeof(ram_UAV_limits[UL_PHI_UPPER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ROLL_U_LIM);
+               break;
+             }
+          case PITCH_L_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","PITCH_L_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_THETA_LOWER_LIMIT], sizeof(ram_UAV_limits[UL_THETA_LOWER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,PITCH_L_LIM);
+               break;
+             }
+          case PITCH_U_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","PITCH_U_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_THETA_UPPER_LIMIT], sizeof(ram_UAV_limits[UL_THETA_UPPER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,PITCH_U_LIM);
+               break;
+             }
+          case ARSPD_L_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ARSPD_L_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_IAS_LOWER_LIMIT], sizeof(ram_UAV_limits[UL_IAS_LOWER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ARSPD_L_LIM);
+               break;
+             }
+          case ARSPD_U_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ARSPD_U_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_IAS_UPPER_LIMIT], sizeof(ram_UAV_limits[UL_IAS_UPPER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ARSPD_U_LIM);
+               break;
+             }
+          case ALT_L_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ALT_L_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_ALT_LOWER_LIMIT], sizeof(ram_UAV_limits[UL_ALT_LOWER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ALT_L_LIM);
+               break;
+             }
+          case ALT_U_LIM:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","ALT_U_LIM");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_ALT_UPPER_LIMIT], sizeof(ram_UAV_limits[UL_ALT_UPPER_LIMIT]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,ALT_U_LIM);
+               break;
+             }
+           case LOITER_RD:
+         	 {
+	            snprintf(msg_status_txt,sizeof(msg_status_txt) - 1,"%s","LOITER_RD");
+	            memcpy(&temp_float, &ram_UAV_limits[UL_DEFAULT_LOITER_RAD], sizeof(ram_UAV_limits[UL_DEFAULT_LOITER_RAD]));
+	            mavlink_msg_param_value_send(msg_status_txt,temp_float,NUM_OF_NAMES,LOITER_RD);
+               break;
+             }
+
+       }//end switch
+}//end send_param_list
+
+

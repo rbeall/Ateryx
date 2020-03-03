@@ -1,0 +1,58 @@
+/*** BeginHeader mavlink_send_status*/
+#define MAVLINK_MSG_ID_SYS_STATUS 1
+void mavlink_send_status(void);
+/*** EndHeader */
+void mavlink_send_status(void)
+{
+   auto char pkt[31 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   auto unsigned int temp_uint_sys;
+   auto int temp_int_sys;
+   auto char temp_char_sys;
+
+   payload_length = 31;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_SYS_STATUS; //Message ID
+
+    memset(&pkt[6],  0, 4); //onboard_control_sensors_present
+    memset(&pkt[10],  0, 4); //onboard_control_sensors_enabled
+    memset(&pkt[14],  0, 4); //onboard_control_sensors_health
+    memset(&pkt[18],  0, 2); //cpu load  (0%: 0, 100%: 1000)
+
+    temp_uint_sys = (unsigned int)(m_floats[MF_BATTERY_VOLTAGE]*1000);
+    memcpy(&pkt[20], &temp_uint_sys, sizeof(temp_uint_sys));
+
+    temp_int_sys = (int)(m_floats[MF_BATTERY_CURRENT]*100);
+    memcpy(&pkt[22], &temp_uint_sys, sizeof(temp_uint_sys));
+
+    memset(&pkt[24],  0, 2); //Packet Drop rate (0%: 0, 100%: 10'000)
+    memset(&pkt[26],  0, 2); //error comms
+    memset(&pkt[28],  0, 2); //error count1
+    memset(&pkt[30],  0, 2); //error count2
+    memset(&pkt[32],  0, 2); //error count3
+    memset(&pkt[34],  0, 2); //error count4
+
+    temp_char_sys = (char)(m_floats[MF_BATTERY_PERCENT]);
+    memcpy(&pkt[36], &temp_char_sys, sizeof(temp_char_sys));
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_SYS_STATUS],&checksum); //add seed
+    pkt[37] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[38] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+
+}//end mavlink_send_heartbeat

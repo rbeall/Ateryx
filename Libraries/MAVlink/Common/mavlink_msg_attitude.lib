@@ -1,0 +1,52 @@
+/*** BeginHeader mavlink_send_attitude*/
+#define MAVLINK_MSG_ID_ATTITUDE 30
+#define ATTITUDE_SEED 39
+void mavlink_send_attitude(void);
+/*** EndHeader */
+void mavlink_send_attitude(void)
+{
+   auto char pkt[28 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   char float_tmp[4];
+
+   //paledon(Tx_led);
+   payload_length = 28;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_ATTITUDE; //Message ID
+
+    pkt[6] = 0x00; //mSec
+    pkt[7] = 0x00;
+    pkt[8] = 0x00;
+    pkt[9] = 0x00;
+    memcpy(&pkt[10], &m_floats[MF_PHI], sizeof(m_floats[MF_PHI]));
+    memcpy(&pkt[14], &m_floats[MF_THETA], sizeof(m_floats[MF_THETA]));
+
+#ifndef USE_HIL
+    memcpy(&pkt[18], &m_floats[MF_PSI_GPS], sizeof(m_floats[MF_PSI_GPS]));
+#else
+    memcpy(&pkt[18], &m_floats[MF_TRUE_PSI], sizeof(m_floats[MF_TRUE_PSI]));
+#endif
+    memcpy(&pkt[22], &m_floats[MF_GYRO_P], sizeof(m_floats[MF_GYRO_P]));
+    memcpy(&pkt[26], &m_floats[MF_GYRO_Q], sizeof(m_floats[MF_GYRO_Q]));
+    memcpy(&pkt[30], &m_floats[MF_GYRO_R], sizeof(m_floats[MF_GYRO_R]));
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_ATTITUDE],&checksum); //add seed
+    pkt[34] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[35] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_send_attitude

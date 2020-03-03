@@ -1,0 +1,62 @@
+/*** BeginHeader mavlink_msg_nav_output*/
+#define MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT 62
+void mavlink_msg_nav_output(void);
+/*** EndHeader */
+void mavlink_msg_nav_output(void)
+{
+   auto char pkt[26 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   int temp_int_nav;
+   float temp_float_nav;
+
+   //paledon(Tx_led);
+   payload_length = 26;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT; //Message ID
+
+    temp_float_nav = g_cmd_stack.desired_roll*RAD2DEG;
+    memcpy(&pkt[6], &temp_float_nav, sizeof(temp_float_nav));
+    temp_float_nav = g_cmd_stack.desired_pitch*RAD2DEG;
+    memcpy(&pkt[10], &temp_float_nav, sizeof(temp_float_nav));
+    temp_float_nav = g_cmd_stack.altitude_error;
+    memcpy(&pkt[14], &temp_float_nav, sizeof(g_cmd_stack.altitude_error));
+    temp_float_nav = g_cmd_stack.airspeed_error *100;
+    memcpy(&pkt[18], &temp_float_nav, sizeof(g_cmd_stack.airspeed_error));
+    memcpy(&pkt[22], &g_cmd_stack.xtrack_error, sizeof(g_cmd_stack.xtrack_error));
+
+    temp_int_nav = (int)(g_cmd_stack.desired_course*RAD2DEG);
+    if (temp_int_nav < 0)
+    	{
+         temp_int_nav +=360;
+      }
+    memcpy(&pkt[26], &temp_int_nav, 2);
+    temp_int_nav = (int)(g_cmd_stack.bearing_to_waypoint*RAD2DEG);
+    if (temp_int_nav < 0)
+    	{
+         temp_int_nav +=360;
+      }
+    memcpy(&pkt[28], &temp_int_nav, 2);
+    temp_int_nav = (int)(g_cmd_stack.distance_to_waypoint);
+    memcpy(&pkt[30], &temp_int_nav, 2);
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT],&checksum); //add seed
+    pkt[32] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[33] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_send_attitude

@@ -1,0 +1,63 @@
+/*** BeginHeader mavlink_msg_vfr_hud_send */
+#define MAVLINK_MSG_ID_VFR_HUD 74
+#define VFR_HUD_SEED 20
+void mavlink_msg_vfr_hud_send(void);
+/*** EndHeader */
+void mavlink_msg_vfr_hud_send(void)
+{
+   auto char pkt[20 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   char float_tmp[4];
+   auto int temp_int_vfr;
+
+   //paledon(Tx_led);
+   payload_length = 20;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_VFR_HUD; //Message ID
+
+    memcpy(&pkt[6], &m_floats[MF_INDICATED_AIRSPEED], sizeof(m_floats[MF_INDICATED_AIRSPEED]));
+    memcpy(&pkt[10], &m_floats[MF_GPS_SPEED], sizeof(m_floats[MF_GPS_SPEED]));
+    memcpy(&pkt[14], &m_floats[MF_ALT_MSL], sizeof(m_floats[MF_ALT_MSL]));
+    //memcpy(&pkt[14], &m_floats[MF_HEIGHT_ABOVE_TERRAIN], sizeof(m_floats[MF_ALT_MSL]));
+    //memcpy(float_tmp, &m_floats[MF_CLIMB_RATE], sizeof(m_floats[MF_CLIMB_RATE]));
+    pkt[18] = 0x00;  //float_tmp[3];
+    pkt[19] = 0x00;  //float_tmp[2];
+    pkt[20] = 0x00;  //float_tmp[1];
+    pkt[21] = 0x00;  //float_tmp[0];
+
+#ifndef USE_HIL
+    temp_int_vfr = (int)(m_floats[MF_PSI_GPS]*RAD2DEG);
+    if (m_floats[MF_PSI] < 0)
+
+	 temp_int_vfr = (int)((m_floats[MF_PSI_GPS]*RAD2DEG)+360);
+#endif
+#ifdef USE_HIL
+    temp_int_vfr = (int)((m_floats[MF_TRUE_PSI]*RAD2DEG));
+#endif
+
+	 memcpy(&pkt[22], &temp_int_vfr, sizeof(temp_int_vfr));;
+
+    temp_int_vfr = (int)g_servos[SERVO_OUT].throttle;
+    memcpy(&pkt[24], &temp_int_vfr, sizeof(temp_int_vfr));
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_VFR_HUD],&checksum); //add seed
+    pkt[26] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[27] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_vfr_hud_send

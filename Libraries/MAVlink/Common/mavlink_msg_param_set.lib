@@ -1,0 +1,706 @@
+/*** BeginHeader mavlink_msg_param_set */
+#define VALUE_INDEX	6
+#define NUM_OF_PARAMS 4
+xmem void mavlink_msg_param_set(char* packet);
+/*** EndHeader */
+xmem void mavlink_msg_param_set(char* packet)
+{
+    auto unsigned int i;
+    auto char key[16],data[16];
+    auto unsigned int name_index;
+    auto float temp_float;
+
+   for(i = 0; i<16; i++)
+      {
+         key[i] = packet[i+12];
+      }
+
+  	//endianess is going to change in 1.0 mavlink
+   temp_float = mavlink_bytes_to_flt(&packet[VALUE_INDEX]);
+
+	for (i=0; i<NUM_OF_NAMES; i++)
+   	{
+	      memset(data,  0, sizeof(data));
+	      get_xstring(xstr_param_names, i, data, sizeof(data));
+	      if (!(strcmp(key,data)))
+	         {
+               switch (i)
+      	            {
+                        case PITCH_KP:
+	                        {
+	                           paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_pitch].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case PITCH_KI:
+	                        {
+	                           paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_pitch].ki, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case PITCH_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_pitch].effort_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case PITCH_INT_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_pitch].integral_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case PITCH_RATE_KP:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_pitch_rate].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case PITCH_RATE_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_pitch_rate].effort_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+
+                        case ROLL_KP:
+	                        {
+	                           paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_roll].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case ROLL_KI:
+	                        {
+	                           paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_roll].ki, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case ROLL_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_roll].effort_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case ROLL_INT_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_roll].integral_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case ROLL_RATE_KP:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_roll_rate].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case ROLL_RATE_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_roll_rate].effort_limit, &temp_float, sizeof(temp_float));
+           							paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case YAW_RATE_KP:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_yaw_rate].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case YAW_RATE_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_yaw_rate].effort_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case HDG_KP:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_heading].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case HDG_KD:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_heading].kd, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case HDG_KI:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_heading].ki, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case HDG_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_heading].effort_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case HDG_INT_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&g_PIDS[PID_heading].integral_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case ARSPD_KP:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_airspeed].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case ARSPD_KD:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_airspeed].kd, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case ARSPD_KI:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_airspeed].ki, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case ARSPD_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float *=DEG2RAD;
+                              memcpy(&g_PIDS[PID_airspeed].effort_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case ARSPD_INT_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float *=DEG2RAD;
+                              memcpy(&g_PIDS[PID_airspeed].integral_limit, &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                        case EH_KP:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_energy_height].kp, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case EH_KD:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_energy_height].kd, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case EH_KI:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_energy_height].ki, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+	                        }
+                        case EH_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_energy_height].effort_limit, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                         case EH_INT_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              memcpy(&g_PIDS[PID_energy_height].integral_limit, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                         case EH_RANGE:
+	                        {
+	                           paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_EH_RANGE], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                         case ROLL_L_LIM:
+	                        {
+	                           paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_PHI_LOWER_LIMIT], &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                            }
+                         case ROLL_U_LIM:
+	                        {
+                             	paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_PHI_UPPER_LIMIT], &temp_float, sizeof(temp_float));
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case PITCH_L_LIM:
+	                        {
+                              paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_THETA_LOWER_LIMIT], &temp_float, sizeof(temp_float));
+                              paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case PITCH_U_LIM:
+	                        {
+                              paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_THETA_UPPER_LIMIT], &temp_float, sizeof(temp_float));
+                              paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ARSPD_L_LIM:
+	                        {
+                           	paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_IAS_LOWER_LIMIT], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ARSPD_U_LIM:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_IAS_UPPER_LIMIT], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ALT_L_LIM:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_ALT_LOWER_LIMIT], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,ALT_L_LIM,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ALT_U_LIM:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_ALT_UPPER_LIMIT], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case DERIV_CUTOFF:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_PID_DERIVE_CORNER_FREQ], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case AIL_SCALAR:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_AILERON_SCALAR], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_SCALAR].aileron, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ELE_SCALAR:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_ELEVATOR_SCALAR], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_SCALAR].elevator, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case THR_SCALAR:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_THROTTLE_SCALAR], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_SCALAR].throttle, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case RUD_SCALAR:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_RUDDER_SCALAR], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_SCALAR].rudder, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case AIL_BIAS:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_AILE_SERVO_BIAS], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_BIAS].aileron, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ELE_BIAS:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_ELEV_SERVO_BIAS], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_BIAS].elevator, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case THR_BIAS:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_SERVO_MIXING], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_BIAS].throttle, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case RUD_BIAS:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_RUDD_SERVO_BIAS], &temp_float, sizeof(temp_float));
+                              memcpy(&g_servos[SERVO_BIAS].rudder, &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                        case TRIM_THROTTLE:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_TRIM_THROTTLE], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case IDLE_THROTTLE:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_IDLE_THROTTLE], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case CRUISE_ARSPD:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_CRUISE_ARSPD], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              g_PIDS[PID_airspeed].desired = ram_UAV_limits[UL_CRUISE_ARSPD];
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ROLL_TO_ELEV:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_ROLL_TO_ELEV], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case PSIDOT_CTRL:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_PSIDOT_CTRL], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case T_OFF_PITCH:
+	                        {
+                              paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_T_OFF_PITCH], &temp_float, sizeof(temp_float));
+                              paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case LND_APCH_SPD:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_LND_APCH_SPD], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case SERVO_MIX:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_SERVO_MIXING], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case LOITER_RD:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_DEFAULT_LOITER_RAD], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ORBIT_GAIN:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_ORBIT_GAIN], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case WYPT_RAD:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_WYPT_RAD], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case XTRACK_GAIN:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_XTRACK_GAIN], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case ENTRY_ANGLE:
+	                        {
+                              paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_ENTRY_ANGLE], &temp_float, sizeof(temp_float));
+                              paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case CMD_TOTAL:
+                         	{
+                           	paledon(GPS_led);
+                            	mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              paledoff(GPS_led); // Don't actually set anything because not a good idea
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                        case FLD_ELEV:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_FIELD_ELEVATION], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                        case FLD_ATM_PRESS:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_FIELD_ATM_PRESS], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                        case MAG_INCL:
+	                        {
+                              paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_MAG_INCLINATION], &temp_float, sizeof(temp_float));
+                              paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case MAG_DECL:
+	                        {
+                              paledon(GPS_led);
+                              mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+                              temp_float*=DEG2RAD;
+                              memcpy(&ram_UAV_limits[UL_MAG_DECLINATION], &temp_float, sizeof(temp_float));
+                              paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case MAG_TOTAL:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_MAG_TOTAL], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case MAG_XSF:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_MAG_XSF], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case MAG_XOFF:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_MAG_XOFF], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case MAG_YSF:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_MAG_YSF], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+                         case MAG_YOFF:
+	                        {
+                              paledon(GPS_led);
+                              memcpy(&ram_UAV_limits[UL_MAG_YOFF], &temp_float, sizeof(temp_float));
+	                           mavlink_msg_param_value_send(key,temp_float,NUM_OF_PARAMS,0,MAVLINK_TYPE_FLOAT);
+	                           paledoff(GPS_led);
+                              i = NUM_OF_NAMES;
+                              break;
+                           }
+
+                     }//end switch
+	         }
+	   }
+}//end mavlink_msg_param_set
+
+/*** BeginHeader get_xstring */
+void get_xstring(unsigned long xstring_addr, int index, char *data, int max_data);
+/*** EndHeader */
+void get_xstring(unsigned long xstring_addr, int index, char *data, int max_data)
+{
+	unsigned long  string_addr, index_addr;
+
+	// calculate address in string index
+	xstring_addr += index * sizeof(long);
+	// get address of desired string
+	xmem2root((void *)&string_addr, xstring_addr, sizeof(long));
+	// load string into data
+	xmem2root((void *)data, string_addr, max_data);
+}//get_xstring

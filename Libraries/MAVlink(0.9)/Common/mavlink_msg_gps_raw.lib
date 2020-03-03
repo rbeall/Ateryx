@@ -1,0 +1,81 @@
+/*** BeginHeader mavlink_msg_gps_raw_send */
+#define MAVLINK_MSG_ID_GPS_RAW 32
+void mavlink_msg_gps_raw_send(void);
+/*** EndHeader */
+void mavlink_msg_gps_raw_send(void)
+{
+   auto char pkt[37 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   char float_tmp[4];
+
+   //paledon(Tx_led);
+   payload_length = 37;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_GPS_RAW; //Message ID
+
+    pkt[6] = 0x00; //uSec
+    pkt[7] = 0x00;
+    pkt[8] = 0x00;
+    pkt[9] = 0x00;
+    pkt[10] = 0x00;
+    pkt[11] = 0x00;
+    pkt[12] = 0x00;
+    pkt[13] = 0x00;
+
+    pkt[14] = m_bytes[MB_GPS_FIX_QUALITY];
+
+    memcpy(float_tmp, &m_floats[MF_GPS_LAT], sizeof(m_floats[MF_GPS_LAT]));
+    pkt[15] = float_tmp[3]; //Lattitude
+    pkt[16] = float_tmp[2];
+    pkt[17] = float_tmp[1];
+    pkt[18] = float_tmp[0];
+    memcpy(float_tmp, &m_floats[MF_GPS_LON], sizeof(m_floats[MF_GPS_LON]));
+    pkt[19] = float_tmp[3]; //Longitude
+    pkt[20] = float_tmp[2];
+    pkt[21] = float_tmp[1];
+    pkt[22] = float_tmp[0];
+    memcpy(float_tmp, &m_floats[MF_GPS_ALTITUDE], sizeof(m_floats[MF_GPS_ALTITUDE]));
+    pkt[23] = float_tmp[3]; //GPS Altitude
+    pkt[24] = float_tmp[2];
+    pkt[25] = float_tmp[1];
+    pkt[26] = float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_EPH], sizeof(m_floats[MF_EPH]));
+    pkt[27] = 0x00; //float_tmp[3];  //assumes fixed wing SOG is all in the X axis
+    pkt[28] = 0x00; //float_tmp[2];
+    pkt[29] = 0x00; //float_tmp[1];
+    pkt[30] = 0x00; //float_tmp[0];
+    //memcpy(float_tmp, &m_floats[MF_EPV], sizeof(m_floats[MF_EPV]));
+    pkt[31] = 0x00; //float_tmp[3];  //assumes fixed wing SOG is all in the X axis
+    pkt[32] = 0x00; //float_tmp[2];
+    pkt[33] = 0x00; //float_tmp[1];
+    pkt[34] = 0x00; //float_tmp[0];
+    memcpy(float_tmp, &m_floats[MF_GPS_SPEED], sizeof(m_floats[MF_GPS_SPEED]));
+    pkt[35] = float_tmp[3];  //assumes fixed wing SOG is all in the X axis
+    pkt[36] = float_tmp[2];
+    pkt[37] = float_tmp[1];
+    pkt[38] = float_tmp[0];
+    memcpy(float_tmp, &m_floats[MF_GPS_HEADING], sizeof(m_floats[MF_GPS_HEADING]));
+    pkt[39] = float_tmp[3];
+    pkt[40] = float_tmp[2];
+    pkt[41] = float_tmp[1];
+    pkt[42] = float_tmp[0];
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    pkt[43] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[44] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+    for(i = 0; i < (payload_length + 8); i++)
+	{
+		serFputc(pkt[i]);
+	}
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_gps_raw_send

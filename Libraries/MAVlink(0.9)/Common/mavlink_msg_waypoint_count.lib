@@ -1,0 +1,38 @@
+/*** BeginHeader mavlink_msg_wypt_count_send */
+#define MAVLINK_MSG_ID_WAYPOINT_COUNT 44
+void mavlink_msg_wypt_count_send(unsigned int total_waypoints);
+/*** EndHeader */
+void mavlink_msg_wypt_count_send(unsigned int total_waypoints)
+{
+   auto char pkt[4 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+
+   //paledon(Tx_led);
+   payload_length = 4;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_WAYPOINT_COUNT; //Message ID
+
+    pkt[6] = mavlink_system.sysid; ///< System ID
+    pkt[7] = mavlink_system.compid; ///< Component ID
+    pkt[8] = (uint8_t)(total_waypoints >> 8); ///< Number of Waypoints in the Sequence
+    pkt[9] = (uint8_t)(total_waypoints & 0xFF);
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    pkt[10] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[11] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+    for(i = 0; i < (payload_length + 8); i++)
+	{
+		serFputc(pkt[i]);
+	}
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_wypt_count_send

@@ -1,0 +1,327 @@
+/*** BeginHeader */
+#ifndef __COMMS_LIB
+#define __COMMS_LIB
+
+#define PARAM_NUM_MAX 16
+#define true 1
+#define false 0
+/*** EndHeader */
+
+/*** BeginHeader parse_mavlink_msg */
+#define WYPT_PAYLOAD_LENGTH 36
+void parse_mavlink_msg(char* packet);
+/*** EndHeader */
+void parse_mavlink_msg(char* packet)
+{
+   char waypoint_msg[WYPT_PAYLOAD_LENGTH];
+   unsigned int i;
+   unsigned int start_request;
+   unsigned int incoming_waypoint_number,num_of_wypt_rqst;
+   unsigned int temp_total_wypts;
+
+   switch (packet[5]) //packet[5] = Packet ID
+   	{
+          case 0: //Heartbeat packet
+          	{
+               //reset lost comms counter
+               break;
+            }
+          case 20:  //Param Request Read
+          	{
+               start_request = mavlink_bytes_to_uint(&packet[23]);
+
+                for(i = start_request; i < NUM_OF_NAMES +1; i++)
+   	            {
+	                  send_param_list(i);
+	               }
+
+               break;
+            }
+          case 21:  //Param Request List
+          	{
+                for(i = 0; i < NUM_OF_NAMES +1; i++)
+   	            {
+	                  send_param_list(i);
+	               }
+
+               break;
+            }
+ //------- Write MAV Waypoint list------//
+          case 44:	//Waypoint count - starts waypoint download protocol
+            {
+               temp_total_wypts = mavlink_bytes_to_uint(&packet[8]);
+               memcpy(&g_number_of_commands,&temp_total_wypts,2); //save expected number of waypoints
+               mavlink_msg_wypt_rqst_send(0); //request first waypoint
+
+               break;
+            }
+          case 39:  //Incoming waypoint
+            {
+               paledon(GPS_led);
+
+               mavlink_msg_wypt_ack_send();
+               incoming_waypoint_number = mavlink_bytes_to_uint(&packet[8]);
+               mavlink_msg_wypt_to_ram(incoming_waypoint_number,packet);
+
+               paledoff(GPS_led);
+               break;
+            }
+//------- Read MAV Waypoint list------//
+          case 43:  //Waypoint Request List
+          	{
+
+               mavlink_msg_wypt_count_send(g_number_of_commands);
+
+               break;
+            }
+          case 40:  //Waypoint request from GS
+          	{
+               paledon(GPS_led);
+               num_of_wypt_rqst = mavlink_bytes_to_uint(&packet[8]);
+               mavlink_msg_waypoint_send(num_of_wypt_rqst);
+               paledoff(GPS_led);
+               break;
+            }
+//--------------------------------------//
+          case 23:  //Set Param from GS
+          	{
+                mavlink_msg_param_set(packet);
+            }
+//--------------------------------------//
+          case 45: //Clear Waypoint list
+          	{
+             	//g_number_of_commands = 1;
+            }
+
+           case 10:  //action commands
+           	{
+                switch (packet[8]) //packet[5] = Packet ID
+      	         {
+	                   case MAV_ACTION_STORAGE_WRITE:
+	                     {
+                           //Check if airborne here....
+                           mavlink_msg_action_ack_send(MAV_ACTION_STORAGE_WRITE,0x01);
+                           writeFlash();
+
+                           break;
+                        }
+                      case MAV_ACTION_STORAGE_READ:
+	                     {
+                           //Check if airborne here....
+                           mavlink_msg_action_ack_send(MAV_ACTION_STORAGE_READ,0x01);
+                           readFlash(1); //restore defaults to all values from flash
+                           break;
+                        }
+
+
+                  }//end action switch case
+            }
+
+       }//end switch
+}//end parse_mavlink_msg
+
+/*** BeginHeader cof_get_mavlink */
+scofunc void cof_get_mavlink();
+/*** EndHeader */
+scofunc void cof_get_mavlink()
+{
+   char c;
+   int str_length;
+   int i;
+   auto unsigned int MAVlink_step;
+   auto unsigned int MAVlink_index;
+   char MAVlink_sent[MAVLINK_MAX_PAYLOAD_LEN];
+   char MAVlink_msg[MAVLINK_MAX_PAYLOAD_LEN];
+   auto unsigned int checksum;
+   char MAVlink_chk_a, MAVlink_chk_b;
+   char payload_length;
+   //char packet_sequence;
+   //char sysid;
+   //char compid;
+   //char MAVlink_MSG_ID;
+
+   MAVlink_step = 0;
+   MAVlink_index = 6; //starts after Mavlink Core Header
+
+   wfd str_length = cof_serFread(MAVlink_sent,MAVLINK_MAX_PAYLOAD_LEN,50);
+   serFrdFlush();
+
+   for (i = 0; i < str_length; i++)  // Process bytes received
+   {
+      c = MAVlink_sent[i];
+
+   switch (MAVlink_step)
+   	{
+          case 0:
+          	{
+               if(c == 0x55) // MAVlink header
+               {
+                  MAVlink_msg[0] = 0x55;
+            		MAVlink_step++;      // This is the correct Header
+                  MAVlink_index = 6;
+
+                  paledon(Rx_led);
+     	     			//waitfor(DelayMs(10));
+
+               }//end if
+               else
+              	MAVlink_step = 0;
+               break;
+            }//end case 0
+
+          case 1:
+          	{
+              MAVlink_msg[1] = c;
+              payload_length = c;
+              MAVlink_step++;      // Payload Length
+              break;
+            }//end case 1
+          case 2:
+          	{
+              MAVlink_msg[2] = c;
+              MAVlink_step++;      // Packet Sequence
+              break;
+            }//end case 2
+          case 3:
+          	{
+              //if(c == 7) // SysID check
+               //{
+               	MAVlink_msg[3] = c;
+            		MAVlink_step++;      // Check sysid
+              // }//end if
+              // else
+              //	MAVlink_step = 0;
+               break;
+            }//end case 3
+           case 4:
+          	{
+              //if(c == 1) // CompID check
+               //{
+               	MAVlink_msg[4] = c;
+            		MAVlink_step++;      // Check compid
+               //}//end if
+               //else
+              //	MAVlink_step = 0;
+               break;
+            }//end case 4
+          case 5:
+          	{
+              MAVlink_msg[5] = c;
+              MAVlink_step++;      // MSG_ID
+              break;
+            }//end case 5
+
+          case 6:
+          	{
+
+               if (MAVlink_index < (payload_length + 8))
+               	{
+                   	MAVlink_msg[MAVlink_index] = c;
+                     MAVlink_index++;
+
+               	if (MAVlink_index == payload_length + 8)
+                  	{
+
+                     	MAVlink_step = 0;
+                     	MAVlink_index = 6;
+
+                     	checksum = crc_calculate((uint8_t*)((void*)MAVlink_msg), payload_length + MAVLINK_CORE_HEADER_LEN);
+    				  			MAVlink_chk_a = (uint8_t)(checksum & 0xFF); 	//chk_a
+    							MAVlink_chk_b = (uint8_t)(checksum >> 8);  //chk_b
+
+                     	if (MAVlink_chk_a == MAVlink_msg[payload_length+6] && MAVlink_chk_b == MAVlink_msg[payload_length+7])
+                     		{
+                              parse_mavlink_msg(MAVlink_msg);
+	                    			paledoff(Rx_led);
+	                  			//waitfor(DelayMs(10));
+                            }//end if
+                    	}//end if
+
+                  }//end if
+
+                  break;
+            }//end case 6
+
+       }//end switch
+     }//end for
+
+	// Update global packet drops counter
+	//packet_drops += status.packet_rx_drop_count;
+
+}//end get_comms
+
+//------------------------------------------------------------------------
+//--------------------------Send Comms------------------------------------
+//------------------------------------------------------------------------
+
+/*** BeginHeader cof_send_mavlink_slow */
+scofunc void cof_send_mavlink_slow();
+/*** EndHeader */
+nodebug
+scofunc void cof_send_mavlink_slow()
+{
+   auto long cur_rtc,old_rtc;
+   auto float time_since_main_loop_start;
+
+   waitfor(DelayMs(1000));
+
+   while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_SEND_MAVLINK_SLOW)
+            break;
+        else
+            yield;
+    }
+
+    m_floats[MF_DEBUG_1] = (float)(cur_rtc - old_rtc)*10e-4;     //calculate cof rate
+    old_rtc=cur_rtc;
+
+    paledon(Tx_led);
+    mavlink_send_heartbeat();
+    mavlink_send_status();
+    //mavlink_msg_global_position_send();
+    mavlink_msg_gps_raw_send();
+    paledoff(Tx_led);
+
+
+}//end send_comms_slow
+
+/*** BeginHeader cof_send_mavlink_fast */
+scofunc void cof_send_mavlink_fast();
+/*** EndHeader */
+nodebug
+scofunc void cof_send_mavlink_fast()
+{
+   auto long cur_rtc;
+   static long old_rtc;
+   auto float time_since_main_loop_start;
+
+   waitfor(DelayMs(100));
+
+   while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_SEND_MAVLINK_FAST)
+            break;
+        else
+            yield;
+    }
+   old_rtc = MS_TIMER;
+
+   paledon(Tx_led);
+   mavlink_send_attitude();
+   mavlink_send_scaled_imu();
+   mavlink_msg_vfr_hud_send();
+   paledoff(Tx_led);
+
+}//end send_comms_fast
+
+
+/*** BeginHeader */
+#endif
+/*** EndHeader */
+
+

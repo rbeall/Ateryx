@@ -1,0 +1,686 @@
+/* START LIBRARY DESCRIPTION **************************************************
+AT_HEADER.LIB
+
+This library contains definitions and structures used by all libraries.
+The information in this library is the information that changes less frequently
+
+Ateryx Autopilot (TM)
+Copyright © 2011. All rights reserved.
+
+The Ateryx Autopilot, hardware, software, and technical data, are protected by
+copyright law and international treaties.  Unauthorized reproduction or distribution
+of the hardware or software, or any portion of it, is a violation of applicable laws.
+This product is export controlled by the office of Defense Trade Controls which is part
+of the US Department of State.  This product follows rules based on the International
+Trade in Arms Regulations (ITAR).
+END DESCRIPTION **********************************************************/
+
+/*** BeginHeader */
+#ifndef __AT_HEADER_LIB
+#define __AT_HEADER_LIB
+/*** EndHeader */
+
+//#memmap xmem
+#memmap root
+#class auto
+
+
+/*** BeginHeader */
+//-----------------------Definitions------------------------//
+//used for easy porting of typical C code
+
+//typedef char uint8_t;
+//typedef char int8_t;
+//typedef int int16_t;
+//typedef unsigned int uint16_t;
+//typedef long int32_t;
+//typedef unsigned long uint32_t;
+
+#define A2D_16BIT_SCALE		7.629510948348211e-005		//5.0V/16bits
+#define A2D_12BIT_SCALE 	0.0009765625					//2.0v/12bits
+
+#define SERIAL_PORT_A 0    //Debug or HIL
+#define SERIAL_PORT_D 1    //GPS port
+#define SERIAL_PORT_E 2    //Spare
+#define SERIAL_PORT_F 3    //Modem
+
+
+#define AOUTBUFSIZE 2047 				//Set up HIL serial buffer
+#define AINBUFSIZE 2047
+
+#define SPI_SER_C
+#define SPI_CLK_DIVISOR 5				//Minimal clock divisor
+#use "spi.lib"
+
+#define DOUTBUFSIZE 1023 				//GPS Serial Buffer
+#define DINBUFSIZE 1023
+
+#define EOUTBUFSIZE 1023 				//Spair Serial Buffer
+#define EINBUFSIZE 1023
+
+#define FOUTBUFSIZE 2047 				//Modem Serial BUffer
+#define FINBUFSIZE 2047
+
+
+#define GAINSET 0							//rcm3400 adc setup
+#define AVG_SAMPLES 200
+
+#define Tx_led  0  // 	led 1
+#define Rx_led  1  //	led 2
+#define GPS_led  2  //	led 3
+
+#define TWODIVPI 0.63661977	  // 2/PI
+#define PIDIVTWO 1.5707963268	  // PI/2
+#define TWOPI	  6.2831853072   //2*PI
+
+#define SEC_CLK	1024				//number of ticks per second
+
+#define LEFT_HAND_ORBIT 0
+#define RIGHT_HAND_ORBIT 1
+
+/* old pwm channels
+#define AIL_CHANNEL 0
+#define ELE_CHANNEL 2
+#define THR_CHANNEL 1
+#define RUD_CHANNEL 3
+*/
+#define AIL_CHANNEL 4
+#define ELE_CHANNEL 6
+#define THR_CHANNEL 5
+#define RUD_CHANNEL 7
+
+#define PWM_TIMERA_SCALE 0x16 //22
+#define PWM_MATCH 1005 //out of 1023
+#define PWM_MATCH_DIV2 503
+#define PWM_MATCH_1MS 670
+#define PWM_MATCH_1MS_DIV1000 0.670
+#define PWM_MATCH_025MS 168
+#define PWM_MATCH_075MS 503
+
+
+// Servo limits --> milliseconds
+#define CH3_UPPER_LIMIT 2000
+#define CH3_LOWER_LIMIT 1000
+#define CH2_UPPER_LIMIT 2000
+#define CH2_LOWER_LIMIT 1000
+#define CH1_UPPER_LIMIT 2000
+#define CH1_LOWER_LIMIT 1000
+#define CH0_UPPER_LIMIT 2000
+#define CH0_LOWER_LIMIT 1000
+
+// Array index values
+// Misc bytes
+#define NUMBER_OF_BYTES 4
+
+enum
+{
+ MB_AIRBORNE = 0,
+ MB_GPS_NUM_SATELLITES,
+ MB_GPS_FIX_QUALITY, //[GPS Fix Quality] {Quality of GPS fix 0=no fix,1=2d,2=3d}
+ MB_HIL_STATUS
+};
+
+// Misc ints
+#define NUMBER_OF_INTS 6
+enum
+{
+MI_FLC = 0,
+MI_UAV_MODE,
+MI_TIME_SINCE_LAST_COMM,
+MI_DEBUG1,
+MI_DEBUG2,
+MI_DEBUG3
+};
+
+// Misc floats
+#define NUMBER_OF_FLOATS 92
+
+enum
+{
+MF_DT =									 0,	//[DT {The amount of time between each full control loop of the autopilot. (s)}]
+MF_PHI,									 		//[Phi {The estimated roll angle. (rad)}]
+MF_THETA,								 		//[Theta {The estimated pitch angle. (rad)}]
+MF_PSI,									 		//[Psi {Smoothed magnetic heading (gyro + magnetometer). (rad)}]
+MF_PSI_GPS,						    			//[Psi GPS {Smoothed ground track heading (gyro + GPS heading). (rad)}]
+MF_PSI_MAG,							 			//[Psi Mag {raw tilt compensated magnetic heading (rad)}]
+MF_TRUE_PSI,                     		//[True Psi {The actual heading, orientation not direction of travel, of the UAV.}]
+MF_GPS_SPEED,									//[GPS Speed {GPS measured ground speed(m/s).}]
+MF_GROUND_SPEED_EST,			    			//[Ground Speed Estimate {Estimated ground speed (m/s).}]
+MF_GPS_HEADING,						 		//[GPS Heading {GPS measured heading. (rad)}]
+MF_GPS_ALTITUDE,						 		//[GPS Altitude {GPS measured altitude. (m)}]
+MF_GPS_LAT,							 			//[GPS Latitude {The GPS measured Latitude. (deg)}]
+MF_GPS_LON,							 			//[GPS Longitude {The GPS measured Longitude. (deg)}]
+MF_GPS_HDOP,                           //[GPS horizontal dilution of precision]
+MF_RC_COM_PPS,                   		//[RC Comm PPS {Number of RC controller packet received per second by the autopilot.}]
+MF_LAST_COMM_TIME,					 		//[Last Comm Time {Time stamp in milliseconds that the autopilot received the last comm packet. (ms)}]
+MF_LAST_RC_OVER_COMM_TIME,       		//[Last RC Control Packet Time {Time stamp in milliseconds that the autopilot received the last RC controller packet. (ms)}]
+MF_LAST_GPS_LOCK_TIME,           		//[Last GPS Lock Time {Time stamp in milliseconds that the autopilot received the last packet from GPS rx with lock. (ms)}]
+MF_LAST_GPS_COMM_TIME,           		//[Last GPS Comm Time {Time stamp in milliseconds that the autopilot received the last packet from GPS rx. (ms)}]
+MF_LAST_GOOD_BATTERY_TIME,       		//[Last Good Battery Time {Time stamp in milliseconds that the battery voltage was last good. (ms)}]
+MF_MAG_HEADING_RAW,					 		//[Mag Heading {Raw heading measurment from 2d mag. (rad)}]
+MF_BATTERY_VOLTAGE,					 		//[Battery Voltage {Battery voltage. (v)}]
+MF_BATTERY_CURRENT,					 		//[Battery Current {Current measure on current sense pin. (a)}]
+MF_BATTERY_PERCENT,                    //[Percent of Battery charge left]
+MF_WIND_SPEED,                   		//[Wind Speed {Wind speed estimate. (m/s)}]
+MF_WIND_HEADING,                 		//[Wind Heading {Wind from heading estimate (rad)}]
+MF_GROUND_TRACK_HEADING_EST,     		//[Ground Track Heading Est {Estimated ground track heading. (rad)]
+MF_ESTIMATED_CRAB_ANGLE,         		//[Estimated Crab Angle {Estimated difference between mag heading and ground track based on wind information. (rad)}]
+MF_GYRO_P,                       		//[Roll Gyro {Measure roll rate. (rad/s)]
+MF_GYRO_Q,                       		//[Pitch Gyro {Measure pitch rate. (rad/s)]
+MF_GYRO_R,                       		//[Yaw Gyro {Measure yaw rate. (rad/s)]
+MF_HEADING_RATE,                       //[Heading Rate {The measured heading rate. (rad/s)}]
+MF_AX,                           		//[Ax {Measure x acceleration. (m/s^2)}]
+MF_AY,                           		//[Ay {Measure y acceleration. (m/s^2)}]
+MF_AZ,                           		//[Az {Measure z acceleration. (m/s^2)}]
+MF_AX_CORRECTED,                       //[Ax Cor {Ax corrected for coriolis acceleration - experimental. (m/s^2)}]
+MF_AY_CORRECTED,                       //[Ay Cor {Ay corrected for coriolis acceleration - experimental. (m/s^2)}]
+MF_AZ_CORRECTED,                       //[Az Cor {Az corrected for coriolis acceleration - experimental. (m/s^2)}]
+MF_DIFF_PRES,                    		//[Airspeed {Measured airspeed. (m/s)}]
+MF_ABS_PRES,                     		//[Altitude {Measured altitude. (m)}]
+MF_MAG_X,                        		//[Mag X {Measured magnetic field in x direction (a/d)}]
+MF_MAG_Y,                        		//[Mag Y {Measured magnetic field in y direction (a/d)}]
+MF_MAG_Z,                        		//[Mag Z {Measured magnetic field in z direction (a/d)}]
+MF_LINEAR_GAIN_SCALAR,           		//[Linear Effort Scalar {Linear effort scalar based on difference between trim speed and measured airspeed.}]
+MF_THROTTLE_GAIN_SCALAR,         		//[Square Effort Scalar {Square effort scalar based on the square of the difference between trim speed and measured airspeed.}]
+MF_AIRBORNE_TIMER,               		//[Airborne Timer {Amount of time airborne. (s)}]
+MF_AVX_TIME,									//[Avionics Time {Amount of time since autopilot boot up. (s)}]
+MF_AILERON_AUTO_TRIM_EF,         		//[Aileron Auto Trim Effort {The effort of the auto trimmer - summed into aileron channel. (rad)}]
+MF_ELEVATOR_AUTO_TRIM_EF,        		//[Elevator Auto Trim Effort {The effort of the auto trimmer - summed into elevator channel. (rad)}]
+MF_AILERON_SERVO_POS,            		//[Aileron Servo Position {The commanded position of the aileron servo. (rad)}]
+MF_ELEVATOR_SERVO_POS,           		//[Elevator Servo Position {The commanded position of the elevator servo. (rad)}]
+MF_THROTTLE_SERVO_POS,          			//[Throttle Servo Position {The commanded position of the throttle servo. (%)}]
+MF_RUDDER_SERVO_POS,             		//[Rudder Servo Position {The commanded position of the rudder servo. (rad)}]
+MF_CALC_D_YAWRATE,             			//[Calc Des Yawrate {The desired yawrate calculated from desired roll angle and measured airspeed. (rad/s)}]
+MF_LAT_EST,	                   			//[Latitude Estimate {The estimated latitude of aircraft. (deg)}]
+MF_LON_EST,							 			//[Latitude Estimate {The estimated longitude of aircraft. (deg)}]
+MF_GIMBAL_D_AZ,                  		//[Gimbal Des Azimuth {The desired heading command of the gimbal.  (+/-pi rad)}]
+MF_GIMBAL_D_EL,                  		//[Gimbal Des Elevation {The desired pitch command of the gimbal.  (0,-pi rad)}]
+MF_GIMBAL_AZ,                    		//[Gimbal Az pos {The azimuth position of the gimbal. (+/- pi rad)}]
+MF_GIMBAL_EL,                    		//[Gimbal El pos {The elevation position of the gimbal. (0,-pi rad)}]
+MF_AVERAGE_AIRSPEED,             		//[Average Airspeed {10 second average of airspeed. (m/s)}]
+MF_AIRSPEED_BIAS,                		//[Airspeed Bias {The wind corrected difference between ground speed and airspeed - should be near zero. (m/s)}]
+MF_EST_DIFF_PRES_SCALAR,	       		//[Est Diff Pres Scalar {The estimated differential pressure scalar - only calculated when airspeed cal is finished. (Kpa/Kpa)}]
+MF_ALT_MSL,                      		//[Altitude MSL {The Altitude AGL of the aircraft - assumes ground calibration. (M)}]
+MF_ENERGY_HEIGHT,                      //[Total energy V^2 + H]
+MF_TAKE_OFF_TIMER,	             		//[Take Off Timer {Time left before throttle up for take off. (s)}]
+MF_GIMBAL_TARGET_LAT,            		//[Gimbal Target Lat {The latitude which the gimbal is pointing. (deg N)}]
+MF_GIMBAL_TARGET_LON,            		//[Gimbal Target Lon {The longitude which the gimbal is pointing. (deg E)}]
+MF_GIMBAL_TARGET_ALT,            		//[Gimbal Target Alt {The altitude above launch which the gimbal is pointing. (Meters)}]
+MF_ORBIT_PHI_BIAS,               		//[Orbit Phi Bias {The estimate roll angle bias in orbit. (rad)}]
+MF_NAV_PHI_BIAS,                 		//[Nav Phi Bias {The estimate roll angle bias in while navigating Wps. (rad)}]
+MF_TERRAIN_ELEVATION,            		//[Terrain Elevation {The elevation of the terrain in MSL at uav lat/lon. (M)}]
+MF_HEIGHT_ABOVE_TERRAIN,         		//[Height Above Terrain {Estimated height above terrain using terrain elevation data. (M)}]
+MF_HEIGHT_ABOVE_HOME,            		//[Height Above Home {Height above home altitude. (M)}]
+MF_TRUE_AIRSPEED,                		//[True Airspeed  {True Airspeed based on %2 per thousand feet}]
+MF_INDICATED_AIRSPEED,           		//[True Airspeed  {True Airspeed based on %2 per thousand feet}]
+MF_DENSITY,							 			//[Density standard day or updated via calcs]
+MF_EST_DIFF_PRESSURE_BIAS,       		//[Estimated Airspeed Pressure Bias {The estimated airspeed bias (Kpa)}]
+MF_PHI_TURN_RATE,					 			//[LPF Roll Angle {Low pass filtered yaw rate - used for loss of lift and turn detection. (rad/sec)}]
+MF_LOSS_OF_LIFT_EFFORT,			 			//[Loss of Lift Effort {Elevator effort produced from loss of lift compensation. (rad)}]
+MF_CMD_TOTAL,                     		//[Total number of commands plus home cmd]
+MF_DEBUG_1,                      		//[Debug Float 1 {Debug value for development.}]
+MF_DEBUG_2,                      		//[Debug Float 2 {Debug value for development.}]
+MF_DEBUG_3,                      		//[Debug Float 3 {Debug value for development.}]
+MF_DEBUG_4,                      		//[Debug Float 4 {Debug value for development.}]
+MF_DEBUG_5,                      		//[Debug Float 5 {Debug value for development.}]
+MF_DEBUG_6,                      		//[Debug Float 6 {Debug value for development.}]
+ALT_HOLD_RTL                      		//[Test for APM waypoint time out]
+};
+
+#define NUM_OF_NAMES 70
+xstring xstr_param_names{
+"PITCH_KP",
+"PITCH_KI",
+"PITCH_LIM",
+"PITCH_INT_LIM",
+"PITCH_RATE_KP",
+"PITCH_RATE_LIM",
+"ROLL_KP",
+"ROLL_KI",
+"ROLL_LIM",
+"ROLL_INT_LIM",
+"ROLL_RATE_KP",
+"ROLL_RATE_LIM",
+"YAW_RATE_KP",
+"YAW_RATE_LIM",
+"HDG_KP",
+"HDG_KD",
+"HDG_KI",
+"HDG_LIM",
+"HDG_INT_LIM",
+"ARSPD_KP",
+"ARSPD_KD",
+"ARSPD_KI",
+"ARSPD_LIM",
+"ARSPD_INT_LIM",
+"EH_KP",
+"EH_KD",
+"EH_KI",
+"EH_LIM",
+"EH_INT_LIM",
+"EH_RANGE",
+
+"ROLL_L_LIM",
+"ROLL_U_LIM",
+"PITCH_L_LIM",
+"PITCH_U_LIM",
+"ARSPD_L_LIM",
+"ARSPD_U_LIM",
+"ALT_L_LIM",
+"ALT_U_LIM",
+"DERIV_CUTOFF",
+
+"AIL_SCALAR",
+"ELE_SCALAR",
+"THR_SCALAR",
+"RUD_SCALAR",
+"AIL_BIAS",
+"ELE_BIAS",
+"THR_BIAS",
+"RUD_BIAS",
+"TRIM_THROTTLE",
+"IDLE_THROTTLE",
+"CRUISE_ARSPD",
+"ROLL_TO_ELEV",
+"PSIDOT_CTRL",
+
+"T_OFF_PITCH",
+"LND_APCH_SPD",
+
+"SERVO_MIX",
+"LOITER_RD",
+"ORBIT_GAIN",
+"WYPT_RAD",
+"XTRACK_GAIN",
+"ENTRY_ANGLE",
+
+"CMD_TOTAL",
+
+"FLD_ELEV",
+"FLD_ATM_PRESS",
+
+"MAG_INCL",
+"MAG_DECL",
+"MAG_TOTAL",
+"MAG_XSF",
+"MAG_XOFF",
+"MAG_YSF",
+"MAG_YOFF"
+
+};//end of xstr_param_names
+
+enum
+{
+PITCH_KP  = 0,
+PITCH_KI,
+PITCH_LIM,
+PITCH_INT_LIM,
+PITCH_RATE_KP,
+PITCH_RATE_LIM,
+ROLL_KP,
+ROLL_KI,
+ROLL_LIM,
+ROLL_INT_LIM,
+ROLL_RATE_KP,
+ROLL_RATE_LIM,
+YAW_RATE_KP,
+YAW_RATE_LIM,
+HDG_KP,
+HDG_KD,
+HDG_KI,
+HDG_LIM,
+HDG_INT_LIM,
+ARSPD_KP,
+ARSPD_KD,
+ARSPD_KI,
+ARSPD_LIM,
+ARSPD_INT_LIM,
+EH_KP,
+EH_KD,
+EH_KI,
+EH_LIM,
+EH_INT_LIM,
+EH_RANGE,
+
+ROLL_L_LIM,
+ROLL_U_LIM,
+PITCH_L_LIM,
+PITCH_U_LIM,
+ARSPD_L_LIM,
+ARSPD_U_LIM,
+ALT_L_LIM,
+ALT_U_LIM,
+DERIV_CUTOFF,
+
+AIL_SCALAR,
+ELE_SCALAR,
+THR_SCALAR,
+RUD_SCALAR,
+AIL_BIAS,
+ELE_BIAS,
+THR_BIAS,
+RUD_BIAS,
+TRIM_THROTTLE,
+IDLE_THROTTLE,
+CRUISE_ARSPD,
+ROLL_TO_ELEV,
+PSIDOT_CTRL,
+
+T_OFF_PITCH,
+LND_APCH_SPD,
+
+SERVO_MIX,
+LOITER_RD,
+ORBIT_GAIN,
+WYPT_RAD,
+XTRACK_GAIN,
+ENTRY_ANGLE,
+
+CMD_TOTAL,
+
+FLD_ELEV,
+FLD_ATM_PRESS,
+
+MAG_INCL,
+MAG_DECL,
+MAG_TOTAL,
+MAG_XSF,
+MAG_XOFF,
+MAG_YSF,
+MAG_YOFF
+
+};
+
+//UAV limits
+#define NUMBER_OF_UAV_LIMITS 43
+enum{
+UL_EH_RANGE = 0,              //[Error band for altitude in EH controller(meters)]
+UL_PHI_LOWER_LIMIT,				//[Phi Lower Limit {Lower limit on cmd roll angle - alt , vel modes. (rad)}]
+UL_PHI_UPPER_LIMIT,				//[Phi Upper Limit{Upper limit on cmd roll angle - alt , vel modes. (rad)}]
+UL_THETA_LOWER_LIMIT,			//[Theta Lower Limit{Lower limit on cmd pitch angle - manual pitch mode (not used) (rad)}]
+UL_THETA_UPPER_LIMIT,			//[Theta Upper Limit{Upper limit on cmd pitch angle - manual pitch mode (not used) (rad)}]
+UL_IAS_LOWER_LIMIT,           //[IAS Lower Limit{Lower limit on cmd airspeed - desired window  (m/s)}]
+UL_IAS_UPPER_LIMIT,           //[IAS Upper Limit{Upper limit on cmd airspeed - desired window (m/s)}]
+UL_ALT_LOWER_LIMIT,				//[Altitude Lower Limit{Lower limit on cmd altitude - alt mode, desired window (meters)}]
+UL_ALT_UPPER_LIMIT,				//[Altitude Upper Limit{Upper limit on cmd altitude - alt mode, desired window  (meters)}]
+UL_PID_DERIVE_CORNER_FREQ,    //[PID Derivative Corner Freq {Corner frequency of LPF on derivative component of PID control. (Hz)}]
+UL_AILERON_SCALAR,            //[Aileron Scalar {Microseconds of servo PPM to radians of control deflection. (rad/us)}]
+UL_ELEVATOR_SCALAR,           //[Elevator Scalar {Microseconds of servo PPM to radians of control deflection. (rad/us)}]
+UL_THROTTLE_SCALAR,           //[Throttle Scalar {Microseconds of servo PPM to radians of control deflection. (rad/us)}]
+UL_RUDDER_SCALAR,             //[Rudder Scalar {Microseconds of servo PPM to radians of control deflection. (rad/us)}]
+UL_AILE_SERVO_BIAS,           //[Aileron Servo Bias {Microseconds of servo bias - servo neutral point. (uS)}]
+UL_ELEV_SERVO_BIAS,           //[Elevator Servo Bias {Microseconds of servo bias - servo neutral point. (uS)}]
+UL_THRO_SERVO_BIAS,           //[Throttle Servo Bias {Microseconds of servo bias - servo neutral point. (uS)}]
+UL_RUDD_SERVO_BIAS,           //[Rudder Servo Bias {Microseconds of servo bias - servo neutral point. (uS)}]
+UL_TRIM_THROTTLE,					//[Throttle required to maintain level flight]
+UL_IDLE_THROTTLE,					//[Idle throttle position in %0-100]
+UL_CRUISE_ARSPD,              //[Trim airspeed in m/s]
+UL_ROLL_TO_ELEV,              //[Roll to elevator feed fwd for loss of lift in turn]
+UL_PSIDOT_CTRL,               //[Enables Psi dot control on heading controller]
+UL_T_OFF_PITCH,               //[Pitch attitude in degrees to hold until safe altitude is met]
+UL_LND_APCH_SPD,					//[Approach speed for safe laning in m/s]
+UL_SERVO_MIXING,              //[Servo Mixing {Enable, disable elevon mixing - see manual for details. (bitmask)}]
+UL_DEFAULT_LOITER_RAD,			//[Default Loiter Rad {Loiter radius used in loiter mode. (meters)}]
+UL_ORBIT_GAIN,						//[Orbit hold gain - how quick or slow the cmd heading smooths onto orbit]
+UL_WYPT_RAD,						//[Default Waypoint Acceptance distance in meters, triggers fwd sequence]
+UL_XTRACK_GAIN,					//[Gain that defines how quickly vector field converges on trackline]
+UL_ENTRY_ANGLE,               //[Track hold entry angle in rad]
+UL_FIELD_ELEVATION,				//[Take off elevation in meters]
+UL_FIELD_ATM_PRESS,				//[Field atmospheric pressure in inHg]
+UL_ABS_PRESS_INT,					//[Initialized volts to pressure intercept coeff]
+UL_PRESS_TO_ALT_INT,				//[Initialized pressure to altitude intercept coeff]
+UL_MAG_INCLINATION,				//[Magnetic inclination in rad]
+UL_MAG_DECLINATION,				//[Magnetic declination in rad]
+UL_MAG_TOTAL,						//[Total xyz normalized value in ad counts of the local magnetic vector]
+UL_MAG_XSF,                   //[Magnetic x axis scale factor (unitless)]
+UL_MAG_XOFF,                  //[Magnetic x axis offset factor]
+UL_MAG_YSF,                   //[Magnetic y axis scale factor (unitless)]
+UL_MAG_YOFF                  //[Magnetic y axis offset factor]
+};
+
+// Sensors
+#define RES_DIV_TEMP 	2.620761
+#define RES_DIV_ANALOG  2.620761
+#define RES_DIV_BATT 	8.68
+
+#define NUMBER_OF_SENSORS 15
+enum
+{
+ DIFPRES	= 0,
+ ABSPRES,
+ GYRO_P,
+ GYRO_Q,
+ GYRO_R,
+ ACCEL_X,
+ ACCEL_Y,
+ ACCEL_Z,
+ TEMP_P,
+ TEMP_Q,
+ TEMP_R,
+ BATTVOLTS,
+ ADC_CH1,
+ ADC_CH2,
+ ADC_CH3
+};
+//------Temp Comp enums------
+enum
+{
+  AX_SCALE0 = 0,
+  AX_SCALE1,
+  AX_SHIFT0,
+  AX_SHIFT1
+};
+enum
+{
+  AY_SCALE0 = 0,
+  AY_SCALE1,
+  AY_SHIFT0,
+  AY_SHIFT1,
+};
+enum
+{
+  AZ_SCALE0 = 0,
+  AZ_SCALE1,
+  AZ_SHIFT0,
+  AZ_SHIFT1
+};
+
+// PID derivated Low-pass fillter corner frequencies
+#define INNER_LOOP_CORNER_FREQ 150		 // Inner loops (roll, pitch / rates and angles)
+#define OUTER_LOOP_CORNER_FREQ 50		 // Outer loops (altitude, heading)
+// PID controllers
+#define PID_pitch				  		0
+#define PID_pitch_rate				1
+#define PID_roll				  		2
+#define PID_roll_rate				3
+#define PID_yaw_rate					4
+#define PID_heading					5
+#define PID_airspeed  				6
+#define PID_energy_height			7
+#define PID_heading2  		  		8
+#define PID_testloop1		  		9
+#define PID_testloop2 		  		10
+#define PID_testloop3			  	11
+#define PID_testloop4			  	12
+#define PID_testloop5			  	13
+#define PID_testloop6			  	14
+
+#define MAX_PID_LOOP_INDEX		  	14		 // =15 loops
+
+#define DO_NOTHING 0
+#define CONFIGURE_CMD 1
+//FLC bitmasks
+#define FLC_THRO_RESET			  0xFFFC		// ~(0000 0000 0000 0011)
+#define FLC_THRO_EH		  		  0x0001
+#define FLC_PITCH_AIRSPD		  0x0002
+#define FLC_THRO_EH_PITCH_AIRSPD 0x003
+
+#define FLC_ELEV_RESET			  0xFFF3		// ~(0000 0000 0000 1100)
+#define FLC_ELEV_PITCH			  0x0004
+#define FLC_ELEV_PITCH_RATE	  0x0008
+#define FLC_ELEV_PITCH_PITCH_RATE 0x000C
+
+#define FLC_AILE_RESET			  0xFFCF		// ~(0000 0000 0011 0000)
+#define FLC_AILE_ROLL			  0x0010
+#define FLC_AILE_ROLL_RATE		  0x0020
+#define FLC_AILE_ROLL_ROLL_RATE 0x0030
+
+#define FLC_RUDD_RESET			  0xFF3F		// ~(0000 0000 1100 0000)
+#define FLC_RUDD_YAWRATE		  0x0040
+#define FLC_RUDD_HEADING		  0x0080
+
+#define FLC_PITCH_RESET			  0xF8FF		// ~(0000 0111 0000 0000)
+#define FLC_PITCH_AIRSPEED		  0x0300
+#define FLC_PITCH_ALTITUDE		  0x0400
+
+#define FLC_ROLL_RESET			  0xF7FF		// ~(0000 1000 0000 0000)
+#define FLC_ROLL_HEADING		  0x0800
+
+#define NUMBER_OF_SERVO_STRUCTURES 6
+enum
+{
+SERVO_SCALAR = 0,
+SERVO_BIAS,
+PPM_VALUES,
+SERVO_OUT,
+SERVO_RX,
+SERVO_POS_HOLD
+};
+
+#define HOME_LAT 	37.052745400778
+#define HOME_LON  -76.3858902454376
+
+enum //MAV_AUTOPILOT_CUSTOM_MODE ENUM
+{
+MANUAL = 0,
+CIRCLE = 1,
+STABILIZE = 2,
+FLY_BY_WIRE_A = 5,
+FLY_BY_WIRE_B = 6,
+AUTO = 10,
+RTL = 11,
+LOITER = 12,
+LAND = 13,
+TAKEOFF = 14,
+GUIDED = 15
+};
+
+//------------------------Structures------------------------//
+typedef struct temp_comp
+{
+  float ax[4];
+  float ay[4];
+  float az[4];
+  float p[3];
+  float q[3];
+  float r[3];
+  float ap[3];
+  float dp[3];
+}temp_comp;
+
+
+typedef struct sensor
+{
+    float raw;						// raw sensor output
+    float raw_filt;				// filtered raw sensor output
+    float steady;					// steady state sensor output
+    float steady_temp;			// temperature at steadystate sample time
+    float calibrated;			// calibrated sensor output in standard units
+}sensor;
+
+typedef struct PID_loop_flash
+{
+    float kp;
+    float kd;
+    float ki;
+    float effort_limit;
+    float integral_limit;
+    float boot_desired;
+    float loop_id;
+}PID_loop_flash;
+
+typedef struct PID_loop
+{
+    float kp;
+    float kd;
+    float ki;
+    float effort_limit;
+    float integral_limit;
+    float d_LPF_corner_freq;
+    char  loop_id;
+    char  enable;
+    float p_effort;
+    float d_effort;
+    float i_effort;
+    float * effort;
+    float desired;
+    float * actual;
+    float error;
+    float LPF_error;
+    float LPF_error_old;
+    float local_effort;
+}PID_loop;
+
+typedef struct servo
+{
+    float aileron;
+    float elevator;
+    float throttle;
+    float rudder;
+    float ch6;
+    float ch7;
+    float ch8;
+}servo;
+
+
+typedef struct cmd
+{
+    float param1;
+    float param2;
+    float param3;
+    float param4;
+    float x;   //lat
+    float y;   //lon
+    float z;   //alt absolute
+    unsigned int seq;
+    unsigned int command;
+    char frame;
+    char current;
+    char autocontinue;
+
+}cmd;
+
+typedef struct stack
+{
+    cmd *current_cmd;
+    cmd *previous_cmd;
+    uint8 previous_cmd_number;
+    float desired_roll;
+    float desired_pitch;
+    float desired_altitude;
+    float desired_airspeed;
+    float altitude_error;
+    float airspeed_error;
+    float xtrack_error;
+    float desired_heading;      // (rad)  heading to commanded position
+    float desired_course;
+    float bearing_to_waypoint;
+    float distance_to_waypoint;
+
+    float desired_lat;
+    float desired_lon;
+    float previous_lat;
+    float previous_lon;
+
+    float TOT;						  // (seconds) estimated time of arival
+
+}stack;
+
+
+/*** EndHeader */
+
+
+
+/*** BeginHeader */
+#endif __AT_HEADER_LIB
+/*** EndHeader */

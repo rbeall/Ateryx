@@ -1,0 +1,728 @@
+/*** BeginHeader */
+#ifndef __NAVIGATION_LIB
+#define __NAVIGATION_LIB
+/*** EndHeader */
+
+/*** BeginHeader cof_waypoint_navigation */
+scofunc void cof_waypoint_navigation();
+/*** EndHeader */
+nodebug
+scofunc void cof_waypoint_navigation()
+{
+   auto long cur_rtc,old_rtc;
+   auto float time_since_main_loop_start;
+
+   cmd* temp_cmd_address;
+   auto float temp_param1;
+   auto float temp_param2;
+   auto float temp_param3;
+   auto float temp_param4;
+
+   auto unsigned int first_landing_point_cmd;
+   auto float landing_course;
+
+   waitfor(DelayMs(100));
+
+   while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_SEND_MAVLINK_SLOW)
+            break;
+        else
+            yield;
+    }
+
+    //m_floats[MF_DEBUG_2] = (float)(cur_rtc - old_rtc)*10e-4*100;     //calculate cof rate
+    old_rtc=cur_rtc;
+   //-----------------------------------------------
+
+    update_stack(&g_cmd_stack);
+
+    switch (m_ints[MI_UAV_MODE])
+    {
+       case DO_NOTHING:
+       	{
+           break; //do nothing
+         }
+       case CONFIGURE_CMD:
+       	{
+            get_new_cmd(&g_cmd_stack);
+            configure_flight_loop();
+          	break;
+         }
+       case MAV_CMD_NAV_WAYPOINT:
+       	{
+            if(g_number_of_commands == 2)
+            	{
+                	g_cmd_stack.desired_course = g_cmd_stack.bearing_to_waypoint;
+               }
+            if(g_number_of_commands > 2)
+            	{
+               	track_hold(&g_cmd_stack);
+                  if(g_cmd_stack.distance_to_waypoint < ram_UAV_limits[UL_WYPT_RAD])
+               	   {
+	                     m_ints[MI_UAV_MODE] = CONFIGURE_CMD;
+	                  }
+               }
+            break;
+         }
+       case MAV_CMD_NAV_RETURN_TO_LAUNCH:
+       	{
+            //set home waypoint here first
+            orbit_hold(&g_cmd_stack,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+          	break;
+         }
+       case MAV_CMD_NAV_LOITER_UNLIM:
+       	{
+            orbit_hold(&g_cmd_stack,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+            break;
+         }
+       case MAV_CMD_NAV_LAND:
+       	{
+            temp_cmd_address = g_cmd_stack.current_cmd;
+   			temp_param1 = temp_cmd_address->param1;  //landing state machine status
+
+            switch ((unsigned int)temp_param1)
+            {
+               case 0:
+               	{
+                      orbit_hold(&g_cmd_stack,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+                      if ((g_cmd_stack.distance_to_waypoint < (temp_param3+15)) || (g_cmd_stack.distance_to_waypoint < (ram_UAV_limits[UL_DEFAULT_LOITER_RAD]+15)))
+                      	{
+                           temp_param2 = temp_cmd_address->param2;
+                           g_cmd_stack.desired_altitude = temp_param2;
+                           temp_cmd_address->param1 = 1.0;
+                           g_cmds[g_cmd_stack.previous_cmd_number+2].param1 = 1.0;
+
+                        }
+                      break;
+                  }
+               case 1:
+               	{
+                     orbit_hold(&g_cmd_stack,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+                     if((m_floats[MF_ALT_MSL] < (g_cmd_stack.desired_altitude +5.0)) && (m_floats[MF_ALT_MSL] > (g_cmd_stack.desired_altitude -5.0)))
+                     	{
+                         landing_course = get_lamda(g_cmds[g_cmd_stack.previous_cmd_number+1].x,g_cmds[g_cmd_stack.previous_cmd_number+1].y,g_cmds[g_cmd_stack.previous_cmd_number+2].x,g_cmds[g_cmd_stack.previous_cmd_number+2].y);
+                         temp_cmd_address->param1 = 2.0;
+                         g_cmds[g_cmd_stack.previous_cmd_number+2].param1 = 2.0;
+                        }
+
+                     break;
+                  }
+
+               case 2:
+                  {
+              			 orbit_hold(&g_cmd_stack,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+
+                      if ((m_floats[MF_GPS_HEADING] < (landing_course+(10*DEG2RAD))) && (m_floats[MF_GPS_HEADING] > (landing_course-(10*DEG2RAD))))
+                      	{
+                           temp_cmd_address->param1 = 3.0;
+                           get_new_cmd(&g_cmd_stack);
+                           temp_cmd_address = g_cmd_stack.current_cmd;
+                           temp_cmd_address->param1 = 3.0;
+                           g_cmd_stack.desired_altitude = temp_param2;
+                           g_cmd_stack.desired_airspeed = ram_UAV_limits[UL_LND_APCH_SPD];
+                        }
+                      break;
+                  }
+               case 3:
+               	{
+                     track_hold(&g_cmd_stack);
+                     g_cmd_stack.desired_altitude = glide_slope(m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON],g_cmd_stack.previous_lat,g_cmd_stack.previous_lon,g_cmd_stack.desired_lat,g_cmd_stack.desired_lon,temp_param2);
+                     if(m_floats[MF_ALT_MSL] < temp_cmd_address->param4)
+                     	{
+                           m_ints[MI_FLC] &= FLC_THRO_RESET; //reset bitmask to zeros
+                           m_ints[MI_FLC] |= FLC_PITCH_AIRSPD; //add in pitch to airspeed only
+                           g_servos[SERVO_OUT].throttle = ram_UAV_limits[UL_IDLE_THROTTLE]; //0% for electric
+
+                           m_ints[MI_FLC] &= FLC_ROLL_RESET; //turn off heading control
+                           g_cmd_stack.desired_roll = 0.0;
+
+                           temp_cmd_address->param1 = 4.0;
+                        }
+                     break;
+                  }
+               case 4:
+               	{
+                     g_cmd_stack.desired_altitude = glide_slope(m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON],g_cmd_stack.previous_lat,g_cmd_stack.previous_lon,g_cmd_stack.desired_lat,g_cmd_stack.desired_lon,temp_param2);
+                     if((m_floats[MF_INDICATED_AIRSPEED]<(0.5*g_cmd_stack.desired_airspeed)) && (m_floats[MF_GPS_SPEED] < 5.0))
+                     	{
+                     		temp_cmd_address->param1 = 0.0;
+                        }
+                   	break;
+                  }
+
+               default:
+               	{
+                     orbit_hold(&g_cmd_stack,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+                     break;
+                  }
+
+            }//end land switch case
+
+            break;
+         }
+
+       case MAV_CMD_NAV_TAKEOFF:
+       	{
+          	temp_cmd_address = g_cmd_stack.current_cmd;
+   			temp_param1 = temp_cmd_address->param1;  //landing state machine status
+
+            switch ((unsigned int)temp_param1)
+            {
+               case 0:
+               	{
+                     if (m_bytes[MB_AIRBORNE])
+            				{
+                   			temp_cmd_address->param1 = 4.0;
+                           break;
+               	 		}
+                     g_cmd_stack.desired_roll = 0.0;
+                     g_cmd_stack.desired_pitch = ram_UAV_limits[UL_T_OFF_PITCH];
+                     g_cmd_stack.desired_airspeed = ram_UAV_limits[UL_CRUISE_ARSPD];
+                     g_servos[SERVO_OUT].throttle = 0.0;
+                     temp_cmd_address->param1 = 1.0;
+                   	break;
+                  }
+               case 1:
+               	{
+                     if (m_bytes[MB_AIRBORNE])
+            				{
+                   			temp_cmd_address->param1 = 4.0;
+                           break;
+               	 		}
+                     if(sensors[ACCEL_X].calibrated > 1.5)
+                     	{
+                         	temp_cmd_address->param1 = 2.0;
+                        }
+                     break;
+                  }
+               case 2:
+               	{
+                     if (m_bytes[MB_AIRBORNE])
+            				{
+                   			temp_cmd_address->param1 = 4.0;
+                           break;
+               	 		}
+                     if(sensors[ACCEL_X].calibrated < 0.3)
+                     	{
+                         	temp_cmd_address->param1 = 3.0;
+                        }
+                     break;
+                  }
+               case 3:
+               	{
+                     if (m_bytes[MB_AIRBORNE])
+            				{
+                   			temp_cmd_address->param1 = 4.0;
+                           break;
+               	 		}
+                     waitfor(DelayMs(275));
+                  	g_servos[SERVO_OUT].throttle = 100.0;
+                     temp_cmd_address->param1 = 4.0;
+                     break;
+                  }
+               case 4:
+               	{
+                     //temp_cmd_address = g_cmd_stack.current_cmd;
+                     if(m_floats[MF_ALT_MSL] > temp_cmd_address->param2)
+                     	{
+
+                           temp_cmd_address->param1 = 5.0;
+
+                           m_ints[MI_FLC] &=FLC_ROLL_RESET;
+   								m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+
+               				m_ints[MI_FLC] &=FLC_THRO_RESET;
+   								m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+                        }
+                   	break;
+                  }
+                case 5:
+               	{
+                     orbit_hold(&g_cmd_stack,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+                   	break;
+                  }
+            }
+            break;
+         }//end takeoff switch case
+     }//end switch
+}
+/*** BeginHeader init_stack */
+void init_stack(stack *cmd_stack);
+/*** EndHeader */
+void init_stack(stack *cmd_stack)
+{
+     cmd_stack->desired_roll = 0.0;
+     cmd_stack->desired_pitch = 0.0;
+     cmd_stack->desired_altitude = 50.0;
+     cmd_stack->desired_airspeed = ram_UAV_limits[UL_CRUISE_ARSPD];
+     cmd_stack->desired_heading = 0.0;
+}//end init_stack
+/*** BeginHeader update_stack */
+void update_stack(stack *cmd_stack);
+/*** EndHeader */
+void update_stack(stack *cmd_stack)
+{
+    cmd_stack->bearing_to_waypoint = get_lamda(m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON],cmd_stack->desired_lat,cmd_stack->desired_lon);
+    cmd_stack->distance_to_waypoint = dist_to_wpt(m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON],cmd_stack->desired_lat,cmd_stack->desired_lon);
+    cmd_stack->xtrack_error = cross_track(cmd_stack->previous_lat,cmd_stack->previous_lon,cmd_stack->desired_lat,cmd_stack->desired_lon,m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+}//end update_stack
+
+/*** BeginHeader cof_lost_com_detect */
+scofunc void cof_lost_com_detect();
+/*** EndHeader */
+nodebug
+scofunc void cof_lost_com_detect()
+{
+   auto long cur_rtc,old_rtc;
+   auto float time_since_main_loop_start;
+   auto unsigned int temp_mav_cmd;
+
+   waitfor(DelayMs(1000));
+
+   while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_LOST_COMM_DETECT_TIME_SLOT)
+            break;
+        else
+            yield;
+    }
+
+    //m_floats[MF_DEBUG_2] = (float)(cur_rtc - old_rtc)*10e-4*100;     //calculate cof rate
+    old_rtc=cur_rtc;
+   //-----------------------------------------------
+
+   m_ints[MI_TIME_SINCE_LAST_COMM]++; //number of seconds since last good comm
+
+   if(m_ints[MI_TIME_SINCE_LAST_COMM] > 7)
+   	{
+      	temp_mav_cmd= MAV_CMD_NAV_RETURN_TO_LAUNCH;
+	   	memcpy(&g_cmd_stack.desired_lat,&g_cmds[0].x,sizeof(g_cmds[0].x));
+	   	memcpy(&g_cmd_stack.desired_lon,&g_cmds[0].y,sizeof(g_cmds[0].y));
+	      memcpy(&m_ints[MI_UAV_MODE],&temp_mav_cmd,sizeof(temp_mav_cmd));
+         m_ints[MI_TIME_SINCE_LAST_COMM] = 8;
+         paledon(GPS_led);
+      }
+   if(m_ints[MI_TIME_SINCE_LAST_COMM] < 7)
+   	{
+         paledoff(GPS_led);
+      }
+}//end cof_lost_com_detect
+
+/*** BeginHeader new_stack_sync */
+void new_stack_sync(stack *cmd_stack);
+/*** EndHeader */
+void new_stack_sync(stack *cmd_stack)
+{
+    cmd* temp_cmd_address;
+
+	 temp_cmd_address = cmd_stack->current_cmd;
+    //cmd_stack->desired_lat = temp_cmd_address->x;
+    //cmd_stack->desired_lon = temp_cmd_address->y;
+    memcpy(&cmd_stack->desired_lat,&temp_cmd_address->x,4);
+    memcpy(&cmd_stack->desired_lon,&temp_cmd_address->y,4);
+
+    temp_cmd_address = cmd_stack->previous_cmd;
+    //cmd_stack->previous_lat = temp_cmd_address->x;
+    //cmd_stack->previous_lon = temp_cmd_address->y;
+    memcpy(&cmd_stack->previous_lat,&temp_cmd_address->x,4);
+    memcpy(&cmd_stack->previous_lon,&temp_cmd_address->y,4);
+
+}//end new_stack_sync
+
+
+/*** BeginHeader get_new_cmd */
+void get_new_cmd(stack *cmd_stack);
+/*** EndHeader */
+void get_new_cmd(stack *cmd_stack)
+{
+    char next_cmd_index;
+    char prev_cmd_index;
+
+    prev_cmd_index = cmd_stack->previous_cmd_number +1;
+    if (prev_cmd_index > (g_number_of_commands-1))
+      prev_cmd_index -= (g_number_of_commands-1); //skip home command
+
+    if ((g_cmds[prev_cmd_index].command == MAV_CMD_DO_JUMP)&& (g_cmds[prev_cmd_index].param2 > 0.0))
+   	{
+         prev_cmd_index = (char)g_cmds[prev_cmd_index].param1;
+      }
+    if ((g_cmds[prev_cmd_index].command == MAV_CMD_DO_JUMP) && (g_cmds[prev_cmd_index].param2 < 1.0))
+   	{
+         prev_cmd_index -= 1;
+         if(g_cmds[next_cmd_index].param2 < 0.0)
+         	prev_cmd_index +=2;
+      }
+    next_cmd_index = prev_cmd_index +1; //cmd_stack->previous_cmd_number +2;
+    if (next_cmd_index > (g_number_of_commands-1))
+      next_cmd_index -= (g_number_of_commands-1); //skip home command
+
+    if ((g_cmds[next_cmd_index].command == MAV_CMD_DO_JUMP) && (g_cmds[next_cmd_index].param2 > 0.0))
+   	{
+         g_cmds[next_cmd_index].param2 -= 1.0;
+         next_cmd_index = (char)g_cmds[next_cmd_index].param1;
+      }
+    if ((g_cmds[next_cmd_index].command == MAV_CMD_DO_JUMP) && (g_cmds[next_cmd_index].param2 < 1.0))
+   	{
+         g_cmds[next_cmd_index].param2 -= 1.0;
+         next_cmd_index += 1;
+      }
+
+
+    cmd_stack->desired_lat = g_cmds[next_cmd_index].x;
+    cmd_stack->desired_lon = g_cmds[next_cmd_index].y;
+    cmd_stack->previous_lat = g_cmds[prev_cmd_index].x;
+    cmd_stack->previous_lon = g_cmds[prev_cmd_index].y;
+
+    cmd_stack->current_cmd = &g_cmds[next_cmd_index];
+    cmd_stack->previous_cmd = &g_cmds[prev_cmd_index];
+    cmd_stack->previous_cmd_number = prev_cmd_index;
+
+    cmd_stack->desired_altitude = g_cmds[next_cmd_index].z;
+    m_ints[MI_UAV_MODE] = g_cmds[next_cmd_index].command;	//switch case into appropriate cmd
+	 configure_flight_loop();
+
+    mavlink_msg_mission_current_send(next_cmd_index);
+
+    if((g_cmds[next_cmd_index].command == MAV_CMD_NAV_LAND) && (g_cmds[prev_cmd_index].command != MAV_CMD_NAV_LAND))
+    	{
+      	g_cmds[next_cmd_index].param1 = 0.0;
+      }
+    if((g_cmds[next_cmd_index].command == MAV_CMD_NAV_TAKEOFF))
+    	{
+      	g_cmds[next_cmd_index].param1 = 0.0;
+      }
+
+}//end get_new_cmd
+
+/*** BeginHeader get_new_land_cmd */
+void get_new_land_cmd(stack *cmd_stack);
+/*** EndHeader */
+void get_new_land_cmd(stack *cmd_stack)
+{
+    auto char next_cmd_index;
+    auto char prev_cmd_index;
+    auto unsigned int i;
+
+    for(i = 1; i < (g_number_of_commands-1); i++)
+    	{
+			if(g_cmds[i].command == MAV_CMD_NAV_LAND)
+         	{
+                next_cmd_index = i;
+	             if (next_cmd_index > (g_number_of_commands-1))
+	                  next_cmd_index -= (g_number_of_commands-1); //skip home command
+                prev_cmd_index = i-1;
+                if (prev_cmd_index < 1)
+                	prev_cmd_index = g_number_of_commands-1;
+
+                g_cmds[next_cmd_index].param1 = 0.0;
+
+                cmd_stack->desired_lat = g_cmds[next_cmd_index].x;
+    	      	 cmd_stack->desired_lon = g_cmds[next_cmd_index].y;
+                cmd_stack->previous_lat = g_cmds[prev_cmd_index].x;
+    				 cmd_stack->previous_lon = g_cmds[prev_cmd_index].y;
+
+	             cmd_stack->current_cmd = &g_cmds[next_cmd_index];
+                cmd_stack->previous_cmd = &g_cmds[prev_cmd_index];
+    				 cmd_stack->previous_cmd_number = prev_cmd_index;
+
+	             cmd_stack->desired_altitude = g_cmds[next_cmd_index].z;
+
+	             m_ints[MI_UAV_MODE] = g_cmds[next_cmd_index].command;   //switch case into appropriate cmd
+                configure_flight_loop();
+	             mavlink_msg_mission_current_send(next_cmd_index);
+
+                i = g_number_of_commands;
+            }
+      }
+}//end get_new_land_cmd
+
+/*** BeginHeader get_new_takeoff_cmd */
+void get_new_takeoff_cmd(stack *cmd_stack);
+/*** EndHeader */
+void get_new_takeoff_cmd(stack *cmd_stack)
+{
+    auto char next_cmd_index;
+    auto char prev_cmd_index;
+    auto unsigned int i;
+
+    for(i = 1; i < (g_number_of_commands-1); i++)
+    	{
+			if(g_cmds[i].command == MAV_CMD_NAV_TAKEOFF)
+         	{
+                next_cmd_index = i;
+	             if (next_cmd_index > (g_number_of_commands-1))
+	                  next_cmd_index -= (g_number_of_commands-1); //skip home command
+                prev_cmd_index = i-1;
+                if (prev_cmd_index < 1)
+                	prev_cmd_index = g_number_of_commands-1;
+
+                g_cmds[next_cmd_index].param1 = 0.0;
+
+                cmd_stack->desired_lat = g_cmds[next_cmd_index].x;
+    	      	 cmd_stack->desired_lon = g_cmds[next_cmd_index].y;
+
+	             cmd_stack->current_cmd = &g_cmds[next_cmd_index];
+
+	             cmd_stack->desired_altitude = g_cmds[next_cmd_index].z;
+                cmd_stack->desired_airspeed = ram_UAV_limits[UL_CRUISE_ARSPD];
+	             m_ints[MI_UAV_MODE] = g_cmds[next_cmd_index].command;   //switch case into appropriate cmd
+                configure_flight_loop();
+	             mavlink_msg_mission_current_send(next_cmd_index);
+
+                i = g_number_of_commands;
+            }
+      }
+}//end get_new_takeoff_cmd
+
+/*** BeginHeader configure_flight_loop */
+void configure_flight_loop(void);
+/*** EndHeader */
+void configure_flight_loop(void)
+{
+   switch (m_ints[MI_UAV_MODE])
+   	{
+          case MAV_CMD_NAV_WAYPOINT:
+          	{
+               m_ints[MI_FLC] &=FLC_ELEV_RESET;
+               m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+
+               m_ints[MI_FLC] &=FLC_AILE_RESET;
+   				m_ints[MI_FLC] |= FLC_AILE_ROLL;
+
+               m_ints[MI_FLC] &=FLC_ROLL_RESET;
+   				m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+
+               m_ints[MI_FLC] &=FLC_THRO_RESET;
+   				m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+              	break;
+            }
+          case MAV_CMD_NAV_LOITER_UNLIM:
+          	{
+               m_ints[MI_FLC] &=FLC_ELEV_RESET;
+               m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+
+               m_ints[MI_FLC] &=FLC_AILE_RESET;
+   				m_ints[MI_FLC] |= FLC_AILE_ROLL;
+
+               m_ints[MI_FLC] &=FLC_ROLL_RESET;
+   				m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+
+               m_ints[MI_FLC] &=FLC_THRO_RESET;
+   				m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+              	break;
+            }
+          case MAV_CMD_NAV_RETURN_TO_LAUNCH:
+          	{
+               m_ints[MI_FLC] &=FLC_ELEV_RESET;
+               m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+
+               m_ints[MI_FLC] &=FLC_AILE_RESET;
+   				m_ints[MI_FLC] |= FLC_AILE_ROLL;
+
+               m_ints[MI_FLC] &=FLC_ROLL_RESET;
+   				m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+
+               m_ints[MI_FLC] &=FLC_THRO_RESET;
+   				m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+              	break;
+            }
+           case MAV_CMD_NAV_LAND:
+          	{
+               m_ints[MI_FLC] &=FLC_ELEV_RESET;
+               m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+
+               m_ints[MI_FLC] &=FLC_AILE_RESET;
+   				m_ints[MI_FLC] |= FLC_AILE_ROLL;
+
+               m_ints[MI_FLC] &=FLC_ROLL_RESET;
+   				m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+
+               m_ints[MI_FLC] &=FLC_THRO_RESET;
+   				m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+              	break;
+            }
+           case MAV_CMD_NAV_TAKEOFF:
+          	{
+               m_ints[MI_FLC] &=FLC_ELEV_RESET;
+               m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+
+               m_ints[MI_FLC] &=FLC_AILE_RESET;
+   				m_ints[MI_FLC] |= FLC_AILE_ROLL;
+
+               m_ints[MI_FLC] &=FLC_ROLL_RESET; //fixed commanded roll
+
+               m_ints[MI_FLC] &=FLC_THRO_RESET; //fixed throttle and pitch
+
+              	break;
+            }
+          default:
+          	{
+               m_ints[MI_FLC] &=FLC_ELEV_RESET;
+               m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+
+               m_ints[MI_FLC] &=FLC_AILE_RESET;
+   				m_ints[MI_FLC] |= FLC_AILE_ROLL;
+
+               m_ints[MI_FLC] &=FLC_ROLL_RESET;
+   				m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+
+               m_ints[MI_FLC] &=FLC_THRO_RESET;
+   				m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+              	break;
+            }
+      }//end switch
+}
+
+/*** BeginHeader orbit_hold */
+void orbit_hold(stack *cmd_stack,float lat2,float lon2);
+/*** EndHeader */
+void orbit_hold(stack *cmd_stack,float lat2,float lon2)
+{
+   float psi_cmd;
+   float lamda;
+   float dist;
+   cmd* temp_cmd_address;
+   float radius;
+
+   temp_cmd_address = cmd_stack->current_cmd;
+ 	radius = temp_cmd_address->param3;
+
+   if (fabs(radius) < ram_UAV_limits[UL_DEFAULT_LOITER_RAD])
+   	{
+	      radius = ram_UAV_limits[UL_DEFAULT_LOITER_RAD];  //min radius to prevent blowup
+	   }
+
+   lamda = get_lamda(cmd_stack->desired_lat,cmd_stack->desired_lon,lat2,lon2);
+   dist = dist_to_wpt(m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON],cmd_stack->desired_lat,cmd_stack->desired_lon);
+
+   if(radius < 0)
+   	{
+         //radius*=-1;
+         psi_cmd = (lamda) -(PI/2) - atan(ram_UAV_limits[UL_ORBIT_GAIN]*((dist+radius)/-radius)); //couter clockwise
+      }
+   if(radius > 0)
+   	{
+      	psi_cmd = (lamda) + (PI/2) - atan(-ram_UAV_limits[UL_ORBIT_GAIN]*((dist-radius)/radius)); //clockwise
+      }
+
+   unwrap_angle(&psi_cmd);
+	memcpy(&cmd_stack->desired_course,&psi_cmd,sizeof(psi_cmd));
+}//end orbit_hold
+
+/*** BeginHeader track_hold */
+float track_hold(stack *cmd_stack);
+/*** EndHeader */
+float track_hold(stack *cmd_stack)
+	{
+     float psi_cmd;			//heading cmd out
+     float lamda;
+
+     lamda = get_lamda(cmd_stack->previous_lat,cmd_stack->previous_lon,cmd_stack->desired_lat,cmd_stack->desired_lon);
+     psi_cmd = (-ram_UAV_limits[UL_ENTRY_ANGLE]*(2/PI)*atan(ram_UAV_limits[UL_XTRACK_GAIN]*-cmd_stack->xtrack_error))+lamda;
+
+     if (((cmd_stack->bearing_to_waypoint > (lamda+ram_UAV_limits[UL_ENTRY_ANGLE])) || (cmd_stack->bearing_to_waypoint < (lamda-ram_UAV_limits[UL_ENTRY_ANGLE]))) && (m_ints[MI_UAV_MODE] != MAV_CMD_NAV_LAND))
+     	{
+         psi_cmd = cmd_stack->bearing_to_waypoint;
+      }
+
+     unwrap_angle(&psi_cmd);
+
+	  memcpy(&cmd_stack->desired_course,&psi_cmd,sizeof(psi_cmd));
+}//end track_hold
+
+/*** BeginHeader get_lamda */
+float get_lamda(float lat1, float lon1,float lat2,float lon2);
+/*** EndHeader */
+float get_lamda(float lat1, float lon1,float lat2,float lon2)
+{
+	float lamda;  //initial heading from wypt1 to wypt2
+
+   lamda = atan2(cos(lat1*(PI/180))*sin(lat2*(PI/180))-sin(lat1*(PI/180))*cos(lat2*(PI/180))*cos((lon2-lon1)*(PI/180)), sin((lon2-lon1)*(PI/180))*cos(lat2*(PI/180)));
+	lamda = -(lamda-(PI/2));
+
+   return lamda;   //outputs in radians
+
+}//end get_lamda
+
+/*** BeginHeader cross_track */
+float cross_track(float lat1, float lon1,float lat2,float  lon2,float  lat3,float lon3);
+/*** EndHeader */
+float cross_track(float lat1, float lon1,float lat2,float  lon2,float  lat3,float lon3)
+{
+	float R;                     //1 is start wypt
+	float theta_12;              //2 is end wypt
+	float theta_13;              //3 is vehicle position
+	float d12;
+	float d13;
+	float y_track;
+
+
+	R = 6371000;
+	//d13 = dist_to_wpt(lat1,lon1,lat3,lon3)/1000.0;
+	theta_12 = get_lamda(lat1,lon1,lat2,lon2);
+	theta_13 = get_lamda(lat3,lon3,lat2,lon2);
+	y_track = asin(sin(g_cmd_stack.distance_to_waypoint/R)*sin(theta_13-theta_12))*R;
+
+	return y_track;
+
+}//end cross_track
+
+/*** BeginHeader dist_to_wpt */
+float dist_to_wpt(float lat1, float lon1,float lat2,float lon2);
+/*** EndHeader */
+float dist_to_wpt(float lat1, float lon1,float lat2,float lon2)
+{
+   float R;
+   float delta_lat;
+   float delta_lon;
+   float a;
+   float c;
+   float d;
+
+   R = 6371; //earth's radius in Km
+
+   delta_lat = (lat2 - lat1);
+	delta_lon = (lon2 - lon1);
+
+   if (delta_lat==0 && delta_lon==0) //catches a zero dist calc blowup
+   	return 0.01;
+
+	a = sin((delta_lat/2)*(PI/180))*sin((delta_lat/2)*(PI/180)) + cos(lat1*(PI/180))*cos(lat2*(PI/180)) * sin((delta_lon/2)*(PI/180))*sin((delta_lon/2)*(PI/180));
+	c = 2 * atan2(sqrt(a),sqrt(1-a));
+
+	d = (R * c)*1000;           //m
+	//d = d * 3280.8399;  //ft
+
+ 	return d;
+}//end dist_to_wpt
+
+/*** BeginHeader glide_slope */
+float glide_slope(float lat1, float lon1,float lat2,float lon2,float lat3,float lon3, float break_alt);
+/*** EndHeader */
+
+float glide_slope(float lat1, float lon1,float lat2,float lon2,float lat3,float lon3, float break_alt)
+	{
+      float glide_slope_cmd;
+      float gnd_track;
+      float lnd_slope;
+      float trk_dist;
+
+      gnd_track = dist_to_wpt(lat2,lon2,lat3,lon3);
+      lnd_slope = -break_alt/gnd_track;
+      trk_dist = dist_to_wpt(lat2,lon2,lat1,lon1); //possible bug should be lat1 or?
+
+      glide_slope_cmd = break_alt + (trk_dist*lnd_slope);
+
+      return glide_slope_cmd;
+
+   }//end glide_slope
+
+
+/*** BeginHeader */
+#endif
+/*** EndHeader */

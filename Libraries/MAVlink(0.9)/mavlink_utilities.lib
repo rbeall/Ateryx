@@ -1,0 +1,41 @@
+/*** BeginHeader mavlink_bytes_to_flt */
+float mavlink_bytes_to_flt(char* src);
+/*** EndHeader */
+float mavlink_bytes_to_flt(char* src)
+{
+	typedef union
+   	{
+	      float flt_msg;
+	      char byte_msg[4];
+	   }floatUnion;
+   floatUnion param_union;
+   //endianess is going to change in 1.0 mavlink
+   param_union.byte_msg[3] = src[0];
+   param_union.byte_msg[2] = src[1];
+   param_union.byte_msg[1] = src[2];
+   param_union.byte_msg[0] = src[3];
+
+   return param_union.flt_msg;
+
+}//end mavlink_bytes_to_flt
+
+/*** BeginHeader mavlink_bytes_to_uint */
+unsigned int mavlink_bytes_to_uint(char* src);
+/*** EndHeader */
+unsigned int mavlink_bytes_to_uint(char* src)
+{
+	typedef union
+   	{
+	      unsigned int uint_msg;
+	      char byte_msg[2];
+	   }uintUnion;
+   uintUnion param_union;
+   //endianess is going to change in 1.0 mavlink
+   param_union.byte_msg[1] = src[0];
+   param_union.byte_msg[0] = src[1];
+
+
+   return param_union.uint_msg;
+
+}//end mavlink_bytes_to_uint
+

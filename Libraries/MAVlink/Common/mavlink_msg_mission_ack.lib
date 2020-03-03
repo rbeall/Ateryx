@@ -1,0 +1,59 @@
+/*** BeginHeader mavlink_msg_mission_ack_send */
+#define MAVLINK_MSG_ID_MISSION_ACK 47
+void mavlink_msg_mission_ack_send(char ack_status);
+/*** EndHeader */
+void mavlink_msg_mission_ack_send(char ack_status)
+{
+   auto char pkt[3 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+
+   //paledon(Tx_led);
+   payload_length = 3;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_MISSION_ACK; //Message ID
+
+    pkt[6] = g_mavlink_target_sysid; ///< System ID
+    pkt[7] = g_mavlink_target_compid; ///< Component ID
+    pkt[8] = ack_status; //check enum MAV_CMD_ACK
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_MISSION_ACK],&checksum); //add seed
+    pkt[9] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[10] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_msg_wypt_ack_send
+
+/*** BeginHeader mavlink_msg_mission_to_ram */
+void mavlink_msg_mission_to_ram(unsigned int cmd_index, char* pkt);
+/*** EndHeader */
+void mavlink_msg_mission_to_ram(unsigned int cmd_index, char* pkt)
+{
+     memcpy(&g_cmds[cmd_index].param1, &pkt[6],4);
+     memcpy(&g_cmds[cmd_index].param2, &pkt[10],4);
+     memcpy(&g_cmds[cmd_index].param3, &pkt[14],4);
+     memcpy(&g_cmds[cmd_index].param4, &pkt[18],4);
+     memcpy(&g_cmds[cmd_index].x, &pkt[22],4);
+     memcpy(&g_cmds[cmd_index].y, &pkt[26],4);
+     memcpy(&g_cmds[cmd_index].z, &pkt[30],4);
+     memcpy(&g_cmds[cmd_index].seq, &pkt[34],2);
+     memcpy(&g_cmds[cmd_index].command, &pkt[36],2);
+     memcpy(&g_cmds[cmd_index].frame, &pkt[40],1);
+     memcpy(&g_cmds[cmd_index].current, &pkt[41],1);
+     memcpy(&g_cmds[cmd_index].autocontinue, &pkt[42],1);
+
+}

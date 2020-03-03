@@ -1,0 +1,407 @@
+/*** BeginHeader update_servos */
+void update_servos(void);
+/*** EndHeader */
+void update_servos(void)
+{
+	auto float right_elevon_ppm;
+   auto float left_elevon_ppm;
+   auto float roll_to_elev_fdfwd;
+   auto float roll_angle, pitch_angle;
+
+   switch ((char)ram_UAV_limits[UL_SERVO_MIXING])
+   {
+      case 0: //traditional mixing
+      	{
+         	g_servos[PPM_VALUES].aileron = (g_servos[SERVO_OUT].aileron * g_servos[SERVO_SCALAR].aileron) + g_servos[SERVO_BIAS].aileron;
+	         g_servos[PPM_VALUES].elevator = (g_servos[SERVO_OUT].elevator * g_servos[SERVO_SCALAR].elevator) + g_servos[SERVO_BIAS].elevator;
+            if (m_floats[MF_PHI] > 1.0466)
+               roll_to_elev_fdfwd = -1.0;
+            if (m_floats[MF_PHI] < -1.0466)
+               roll_to_elev_fdfwd = -1.0;
+            if ((m_floats[MF_PHI] >= -1.0466) && (m_floats[MF_PHI] <= 1.0466))
+               roll_to_elev_fdfwd = ((1/(cos(m_floats[MF_PHI]))) - 1.0) * -1;
+            g_servos[PPM_VALUES].elevator += roll_to_elev_fdfwd*ram_UAV_limits[UL_ROLL_TO_ELEV];
+	         g_servos[PPM_VALUES].throttle = (g_servos[SERVO_OUT].throttle * g_servos[SERVO_SCALAR].throttle) + g_servos[SERVO_BIAS].throttle;
+	         g_servos[PPM_VALUES].rudder = (g_servos[SERVO_OUT].rudder * g_servos[SERVO_SCALAR].rudder) + g_servos[SERVO_BIAS].rudder;
+
+            break;
+         }
+       case 1: //elevon mixing on
+      	{
+            if (m_floats[MF_PHI] > 1.0466)
+               roll_to_elev_fdfwd = -1.0;
+            if (m_floats[MF_PHI] < -1.0466)
+               roll_to_elev_fdfwd = -1.0;
+            if ((m_floats[MF_PHI] >= -1.0466) && (m_floats[MF_PHI] <= 1.0466))
+               roll_to_elev_fdfwd = ((1/(cos(m_floats[MF_PHI]))) - 1.0) * -1;
+
+            right_elevon_ppm = g_servos[SERVO_OUT].aileron + g_servos[SERVO_OUT].elevator;
+            left_elevon_ppm = g_servos[SERVO_OUT].aileron - g_servos[SERVO_OUT].elevator;
+
+            g_servos[PPM_VALUES].aileron = (right_elevon_ppm * g_servos[SERVO_SCALAR].aileron) + g_servos[SERVO_BIAS].aileron;
+            g_servos[PPM_VALUES].aileron += roll_to_elev_fdfwd*ram_UAV_limits[UL_ROLL_TO_ELEV];
+
+            g_servos[PPM_VALUES].elevator = (left_elevon_ppm * g_servos[SERVO_SCALAR].elevator) + g_servos[SERVO_BIAS].elevator;
+            g_servos[PPM_VALUES].elevator -= roll_to_elev_fdfwd*ram_UAV_limits[UL_ROLL_TO_ELEV];
+
+            g_servos[PPM_VALUES].throttle = (g_servos[SERVO_OUT].throttle * g_servos[SERVO_SCALAR].throttle) + g_servos[SERVO_BIAS].throttle;
+	         g_servos[PPM_VALUES].rudder = (g_servos[SERVO_OUT].rudder * g_servos[SERVO_SCALAR].rudder) + g_servos[SERVO_BIAS].rudder;
+
+            break;
+         }
+      default:
+      	{
+         	g_servos[PPM_VALUES].aileron = (g_servos[SERVO_OUT].aileron * g_servos[SERVO_SCALAR].aileron) + g_servos[SERVO_BIAS].aileron;
+	         g_servos[PPM_VALUES].elevator = (g_servos[SERVO_OUT].elevator * g_servos[SERVO_SCALAR].elevator) + g_servos[SERVO_BIAS].elevator;
+            if (m_floats[MF_PHI] > 1.0466)
+               roll_to_elev_fdfwd = -1.0;
+            if (m_floats[MF_PHI] < -1.0466)
+               roll_to_elev_fdfwd = -1.0;
+            if ((m_floats[MF_PHI] >= -1.0466) && (m_floats[MF_PHI] <= 1.0466))
+               roll_to_elev_fdfwd = ((1/(cos(m_floats[MF_PHI]))) - 1.0) * -1;
+            g_servos[PPM_VALUES].elevator += roll_to_elev_fdfwd*ram_UAV_limits[UL_ROLL_TO_ELEV];
+	         g_servos[PPM_VALUES].throttle = (g_servos[SERVO_OUT].throttle * g_servos[SERVO_SCALAR].throttle) + g_servos[SERVO_BIAS].throttle;
+	         g_servos[PPM_VALUES].rudder = (g_servos[SERVO_OUT].rudder * g_servos[SERVO_SCALAR].rudder) + g_servos[SERVO_BIAS].rudder;
+	         break;
+         }
+
+
+   }//end servo mixing switch case
+
+   // Output control to ground station
+  	m_floats[MF_AILERON_SERVO_POS]=g_servos[SERVO_OUT].aileron;
+  	m_floats[MF_ELEVATOR_SERVO_POS]=g_servos[SERVO_OUT].elevator;
+  	m_floats[MF_THROTTLE_SERVO_POS]=g_servos[SERVO_OUT].throttle;
+  	m_floats[MF_RUDDER_SERVO_POS]=g_servos[SERVO_OUT].rudder;
+
+}//end update_servos()
+
+/*** BeginHeader init_servos */
+void init_servos(void);
+/*** EndHeader */
+void init_servos(void)
+{
+	g_servos[SERVO_SCALAR].aileron = ram_UAV_limits[UL_AILERON_SCALAR];
+   g_servos[SERVO_BIAS].aileron = ram_UAV_limits[UL_AILE_SERVO_BIAS];
+   g_servos[PPM_VALUES].aileron = 1500;
+   g_servos[SERVO_OUT].aileron = 0;
+   g_servos[SERVO_RX].aileron = 0;
+   g_servos[SERVO_POS_HOLD].aileron = 0;
+
+   g_servos[SERVO_SCALAR].elevator = ram_UAV_limits[UL_ELEVATOR_SCALAR];
+   g_servos[SERVO_BIAS].elevator = ram_UAV_limits[UL_ELEV_SERVO_BIAS];
+   g_servos[PPM_VALUES].elevator = 1500;
+   g_servos[SERVO_OUT].elevator = 0;
+   g_servos[SERVO_RX].elevator = 0;
+   g_servos[SERVO_POS_HOLD].elevator = 0;
+
+   g_servos[SERVO_SCALAR].throttle = ram_UAV_limits[UL_THROTTLE_SCALAR];
+   g_servos[SERVO_BIAS].throttle = ram_UAV_limits[UL_THRO_SERVO_BIAS];
+   g_servos[PPM_VALUES].throttle = 1000;
+   g_servos[SERVO_OUT].throttle = 0;
+   g_servos[SERVO_RX].throttle = 0;
+   g_servos[SERVO_POS_HOLD].throttle = 0;
+
+   g_servos[SERVO_SCALAR].rudder = ram_UAV_limits[UL_RUDDER_SCALAR];
+   g_servos[SERVO_BIAS].rudder = ram_UAV_limits[UL_RUDD_SERVO_BIAS];
+   g_servos[PPM_VALUES].rudder = 1500;
+   g_servos[SERVO_OUT].rudder = 0;
+   g_servos[SERVO_RX].rudder = 0;
+   g_servos[SERVO_POS_HOLD].rudder = 0;
+
+   m_floats[MF_AILERON_SERVO_POS]=g_servos[SERVO_OUT].aileron;
+  	m_floats[MF_ELEVATOR_SERVO_POS]=g_servos[SERVO_OUT].elevator;
+  	m_floats[MF_THROTTLE_SERVO_POS]=g_servos[SERVO_OUT].throttle;
+  	m_floats[MF_RUDDER_SERVO_POS]=g_servos[SERVO_OUT].rudder;
+
+}//end init_servos()
+
+/*** BeginHeader init_soft_pwm */
+void init_soft_pwm(void);
+/*** EndHeader */
+void init_soft_pwm(void)
+{
+   //init timer B interupt
+   auto char lsb,usb;
+
+   SetVectIntern(0x0B, soft_pwm_isr);
+
+   WrPortI(TBCR, &TBCRShadow, 0x05);		// clock timer B with (timer a1) and level 1 priority interupt
+   WrPortI(TAT1R, &TAT1RShadow, PWM_TIMERA_SCALE);    //Load timerA with decimal 22 to get 1.5ms at a 1006 match register
+
+   lsb=(char)(0x1F7&0x00ff);  		//lower bits of uint16 (10 bytes total this is first 8)
+   usb=(char)((0x1F7&0x0300)>>2); 	//uper two bytes of uint16 moved two to the right
+   WrPortI(TBM1R, NULL, usb);       // set initial match 0x3D8 (984 match for 1ms)
+	WrPortI(TBL1R, NULL, lsb);
+
+   WrPortI(TBCSR, &TBCSRShadow, 0x03);		// enable timer B and B1 match interrupt
+
+   RdPortI(TBCSR);								//clear interrupt flag
+
+   g_soft_pwm_state =0;
+
+}//end init_soft_pwm
+
+/*** BeginHeader soft_pwm_isr */
+nodebug root interrupt soft_pwm_isr(void);
+/*** EndHeader */
+nodebug root interrupt soft_pwm_isr(void)
+{
+   auto char tb_status;
+   auto float duty_cycle;
+   auto unsigned int duty_cycle_uint;
+
+   tb_status=RdPortI(TBCSR); 		//read and clear interrupt
+
+   if(tb_status & 0x02)
+   	{
+
+         #asm
+         ipset 	1     ; Set interupt priorty
+     		#endasm
+
+
+            switch (g_soft_pwm_state)
+            	{
+//------Aileron Channel------
+            	case 0:  //take pin High for 1ms sync pulse
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 1, AIL_CHANNEL);
+
+                     duty_cycle_uint = PWM_MATCH_075MS&0xFF | ((PWM_MATCH_075MS<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 1:  //keep pin high for dc
+               	{
+                     duty_cycle = ((g_servos[PPM_VALUES].aileron-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 2:  //finsh out 1ms compliment
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 0, AIL_CHANNEL);
+
+                     duty_cycle = (PWM_MATCH-(g_servos[PPM_VALUES].aileron-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+//------Elevator Channel------
+              case 3:  //take pin High for 1ms sync pulse
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 1, ELE_CHANNEL);
+
+                     duty_cycle_uint = PWM_MATCH_075MS&0xFF | ((PWM_MATCH_075MS<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 4:  //keep pin high for dc
+               	{
+                     duty_cycle = ((g_servos[PPM_VALUES].elevator-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 5:  //finsh out 1ms compliment
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 0, ELE_CHANNEL);
+
+                     duty_cycle = (PWM_MATCH-(g_servos[PPM_VALUES].elevator-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+//------Throttle Channel------
+               case 6:  //take pin High for 1ms sync pulse
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 1, THR_CHANNEL);
+
+                     duty_cycle_uint = PWM_MATCH_075MS&0xFF | ((PWM_MATCH_075MS<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 7:  //keep pin high for dc
+               	{
+                     duty_cycle = ((g_servos[PPM_VALUES].throttle-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 8:  //finsh out 1ms compliment
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 0, THR_CHANNEL);
+
+                     duty_cycle = (PWM_MATCH-(g_servos[PPM_VALUES].throttle-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+//------Rudder Channel------
+               case 9:  //take pin High for 1ms sync pulse
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 1, RUD_CHANNEL);
+
+                     duty_cycle_uint = PWM_MATCH_075MS&0xFF | ((PWM_MATCH_075MS<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 10:  //keep pin high for dc
+               	{
+                     duty_cycle = ((g_servos[PPM_VALUES].rudder-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               case 11:  //finsh out 1ms compliment
+               	{
+                     BitWrPortI(PFDR, &PFDRShadow, 0, RUD_CHANNEL);
+
+                     duty_cycle = (PWM_MATCH-(g_servos[PPM_VALUES].rudder-1500)*PWM_MATCH_1MS_DIV1000+PWM_MATCH_DIV2);
+                     if(duty_cycle  > (PWM_MATCH_1MS+PWM_MATCH_025MS))
+                     	duty_cycle = (PWM_MATCH_1MS+PWM_MATCH_025MS);
+                     if(duty_cycle  < PWM_MATCH_025MS) //catches wrap due to time out of isr
+                     	duty_cycle = PWM_MATCH_025MS;
+                     duty_cycle_uint = (unsigned int)duty_cycle;
+                     duty_cycle_uint = duty_cycle_uint&0xFF | ((duty_cycle_uint<<6) & 0xC000);
+
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=duty_cycle_uint;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+               default:
+                	{	//fill in gaps to make rep rate ~50hz
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=g_timerb_inc;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state++;
+                     break;
+                  }
+
+              case 18:
+               	{		//reset statemachine to start new pulses
+                     g_timerb_match|=0x3F00;
+                     g_timerb_match+=g_timerb_inc;
+
+                     WrPortI(TBM1R, NULL, g_timerb_match>>8);
+                     WrPortI(TBL1R, NULL, g_timerb_match);
+                     g_soft_pwm_state = 0;
+                     break;
+                  }
+
+                }//end switch
+
+         #asm
+      	ipres 		//reset interrupt priority
+     		#endasm
+      }
+}//end soft_pwm_isr
+

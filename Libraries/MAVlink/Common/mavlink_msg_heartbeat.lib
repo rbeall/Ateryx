@@ -1,0 +1,45 @@
+/*** BeginHeader mavlink_send_heartbeat*/
+#define MAVLINK_MSG_ID_HEARTBEAT 0
+#define HEARTBEAT_SEED	50
+void mavlink_send_heartbeat(void);
+/*** EndHeader */
+void mavlink_send_heartbeat(void)
+{
+   auto char pkt[9 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+
+   //paledon(Tx_led);
+   payload_length = 9;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+	 pkt[5] = MAVLINK_MSG_ID_HEARTBEAT; //Message ID
+
+    pkt[6] = (char)m_ints[MI_UAV_MODE];
+    pkt[7] = 0x00;
+    pkt[8] = 0x00;
+    pkt[9] = 0x00;
+    pkt[10] = MAV_TYPE_FIXED_WING;	//< Type of the MAV (quadrotor, helicopter, etc., up to 15 types, defined in MAV_TYPE ENUM)
+    pkt[11] = 0x00;    //< Autopilot type / class. defined in MAV_CLASS ENUM
+    pkt[12] = MAV_MODE_FLAG_CUSTOM_MODE_ENABLED;  //< System mode bitfield, see MAV_MODE_FLAGS ENUM in mavlink/include/mavlink_types.h
+    pkt[13] = MAV_STATE_ACTIVE; 		//< System status flag, see MAV_STATUS ENUM
+    pkt[14] = 0x03;  					//< MAVLink version
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    crc_accumulate(g_crc_seeds[MAVLINK_MSG_ID_HEARTBEAT],&checksum); //add seed
+    pkt[15] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[16] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+#ifdef USE_HIL
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_A);
+#else
+   write_packet(&pkt[0],payload_length,SERIAL_PORT_F);
+#endif
+   packet_sequence++;
+   //paledoff(GPS_led);
+}//end mavlink_send_heartbeat

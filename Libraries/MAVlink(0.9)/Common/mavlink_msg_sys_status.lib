@@ -1,0 +1,44 @@
+/*** BeginHeader mavlink_send_status*/
+#define MAVLINK_MSG_ID_SYS_STATUS 34
+void mavlink_send_status(void);
+/*** EndHeader */
+void mavlink_send_status(void)
+{
+   auto char pkt[11 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+
+   payload_length = 11;
+
+    pkt[0] = MAVLINK_STX; //Mavlink Header
+    pkt[1] = payload_length; //Payload length
+    pkt[2] = packet_sequence; //Packet sequence
+    pkt[3] = mavlink_system.sysid; //System ID
+    pkt[4] = mavlink_system.compid; //Component ID
+    pkt[5] = MAVLINK_MSG_ID_SYS_STATUS; //Message ID
+
+    pkt[6] = 0x00; //Mode
+    pkt[7] = 0x00; //Nav_mode
+    pkt[8] = MAV_STATE_ACTIVE; //Status
+    pkt[9] = 0x00; //Load
+    pkt[10] = 0x00; //
+    pkt[11] = (uint8_t)((unsigned int)(m_floats[MF_BATTERY_VOLTAGE]*1000)>> 8); //Vbatt
+    pkt[12] = (uint8_t)((unsigned int)(m_floats[MF_BATTERY_VOLTAGE]*1000)& 0xFF);
+    pkt[13] = (uint8_t)((unsigned int)(m_floats[MF_BATTERY_PERCENT])>> 8); // Battery Remaining
+    pkt[14] = (uint8_t)((unsigned int)(m_floats[MF_BATTERY_VOLTAGE])& 0xFF);
+    pkt[15] = 0x00; //Packet Drop
+    pkt[16] = 0x00; //
+
+    checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+    pkt[17] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+    pkt[18] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+    for(i = 0; i < (payload_length + 8); i++)
+	{
+		serFputc(pkt[i]);
+	}
+   packet_sequence++;
+
+}//end mavlink_send_heartbeat

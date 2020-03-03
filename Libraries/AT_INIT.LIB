@@ -1,0 +1,240 @@
+/*** BeginHeader */
+#ifndef __AT2INIT_LIB
+#define __AT2INIT_LIB
+/*** EndHeader */
+
+/* START LIBRARY DESCRIPTION *********************************************
+
+at2init.lib
+	created by Ryan Beall 3MAR09
+   	-Holding mids back one library function at a time!
+
+END DESCRIPTION *********************************************************/
+
+/*** BeginHeader Init_Ateryx */
+
+void Init_Ateryx(void) ;
+/*** EndHeader */
+void Init_Ateryx(void)
+{
+
+   brdInit();
+
+#ifdef USE_HIL
+   serAopen(115200);				//Set up serial Port A  for comms on 115200 baud
+   serArdFlush();
+#endif
+   serDopen(38400);				//Set up serial Port D  for GPS on 38400 baud
+	serDparity(PARAM_NOPARITY);
+   serDrdFlush();
+
+   serEopen(115200);				//Set up serial Port E  for comms on 19200 baud
+   serEparity(PARAM_OPARITY);
+   serErdFlush();
+
+   serFopen(115200);				//Set up serial Port F  for comms on 115200 baud
+   serFrdFlush();
+
+	SPIinit();			//Serial Peripherial Interface (Syscronous serial bus)
+
+   anaIn(0,SINGLE,GAINSET);		//charge cap for 7870 adc
+   MsDelay(500);
+
+
+   	WrPortI(PFFR,&PFFRShadow,0x02);			//Port F functions as normal I/O except Clk C for spi
+
+      WrPortI(PFDDR,&PFDDRShadow,0xF3);		//PWM output on F4-F7 and Clk C&D output, others inputs
+
+      BitWrPortI(PFDR, &PFDRShadow, 1, 0); 	//Take F0 for data logger ouput pin high (low 2ms pulse resets)
+
+      BitWrPortI(PFDR, &PFDRShadow, 0, 4); 	//Take PWM ouput pins low
+      BitWrPortI(PFDR, &PFDRShadow, 0, 5);
+      BitWrPortI(PFDR, &PFDRShadow, 0, 6);
+      BitWrPortI(PFDR, &PFDRShadow, 0, 7);
+
+   	WrPortI(SPCR,&SPCRShadow,0x84);				//Sets up port A as an output port for led's
+   	BitWrPortI(PADR, &PADRShadow, 0, Rx_led); //Take all Leds low
+   	BitWrPortI(PADR, &PADRShadow, 0, Tx_led);
+   	BitWrPortI(PADR, &PADRShadow, 0, GPS_led);
+
+   //ADS8344 chip select
+   	BitWrPortI(PBDDR,&PBDDRShadow,1,4);       //Sets up port B4 as outputs, all others inputs
+
+   //ADS8344 and Mag data lines
+   	BitWrPortI(PCFR,&PCFRShadow,1,2);			//Sets up C2 as an output
+   	BitWrPortI(PCFR,&PCFRShadow,0,3);			//Sets up C3 as an input
+
+   //-----micro mag setup
+		BitWrPortI(PEDDR, &PEDDRShadow, 0, 0); //Make PE0 an INPUT for DRDY Pin
+
+   	BitWrPortI(PEDDR, &PEDDRShadow, 1, 2); //Make PE2 an OUTPUT for SSNOT Pin
+		BitWrPortI(PEDR,&PEDRShadow,1,2);		//Start with PE2 (SSNOT of MicroMag2 aka chip select) High
+
+   	BitWrPortI(PEDDR, &PEDDRShadow, 1, 1); //Make PE1 an OUTPUT for RESET Pin
+	   BitWrPortI(PEDR,&PEDRShadow,0,1);		//Start with PE1 (RESET of MicroMag2) LOW
+
+   MsDelay(50); //let the adc warm up
+   sensors[ACCEL_X].raw = (float)get_ads8344(ADC_ACCEL_X) * A2D_16BIT_SCALE;//fake read to warmup adc
+   sensors[ACCEL_X].raw = (float)get_ads8344(ADC_ACCEL_X) * A2D_16BIT_SCALE;
+   sensors[ACCEL_Y].raw = (float)get_ads8344(ADC_ACCEL_Y) * A2D_16BIT_SCALE;
+   sensors[ACCEL_Z].raw = (float)get_ads8344(ADC_ACCEL_Z) * A2D_16BIT_SCALE;
+   sensors[GYRO_P].raw = (float)get_ads8344(ADC_GYRO_P) * A2D_16BIT_SCALE;
+   sensors[GYRO_Q].raw = (float)get_ads8344(ADC_GYRO_Q) * A2D_16BIT_SCALE;
+   sensors[GYRO_R].raw = (float)get_ads8344(ADC_GYRO_R) * A2D_16BIT_SCALE;
+   sensors[DIFPRES].raw = (float)get_ads8344(ADC_DIFPRES) * A2D_16BIT_SCALE;
+   sensors[ABSPRES].raw = (float)get_ads8344(ADC_ABSPRES) * A2D_16BIT_SCALE;
+   sensors[TEMP_P].raw  = (float)get_ads7870(ADC_TEMP_P) * A2D_12BIT_SCALE * RES_DIV_TEMP;
+	sensors[TEMP_Q].raw  = (float)get_ads7870(ADC_TEMP_Q) * A2D_12BIT_SCALE * RES_DIV_TEMP;
+	sensors[TEMP_R].raw  = (float)get_ads7870(ADC_TEMP_R) * A2D_12BIT_SCALE * RES_DIV_TEMP;
+   sensors[BATTVOLTS].raw  = (float)get_ads7870(ADC_BATT) * A2D_12BIT_SCALE * RES_DIV_BATT;
+   sensors[ADC_CH1].raw  = (float)get_ads7870(ADC_CHAN_1) * A2D_12BIT_SCALE * RES_DIV_ANALOG;
+   sensors[ADC_CH2].raw  = (float)get_ads7870(ADC_CHAN_2) * A2D_12BIT_SCALE * RES_DIV_ANALOG;
+   sensors[ADC_CH3].raw  = (float)get_ads7870(ADC_CHAN_3) * A2D_12BIT_SCALE * RES_DIV_ANALOG;
+
+   sensors[ACCEL_X].raw_filt = sensors[ACCEL_X].raw;
+   sensors[ACCEL_Y].raw_filt = sensors[ACCEL_Y].raw;
+   sensors[ACCEL_Z].raw_filt = sensors[ACCEL_Z].raw;
+   sensors[GYRO_P].raw_filt = sensors[GYRO_P].raw;
+   sensors[GYRO_Q].raw_filt = sensors[GYRO_Q].raw;
+   sensors[GYRO_R].raw_filt = sensors[GYRO_R].raw;
+   sensors[DIFPRES].raw_filt = sensors[DIFPRES].raw;
+   sensors[ABSPRES].raw_filt = sensors[ABSPRES].raw;
+   sensors[TEMP_P].raw_filt  = sensors[TEMP_P].raw;
+	sensors[TEMP_Q].raw_filt  = sensors[TEMP_Q].raw;
+	sensors[TEMP_R].raw_filt  = sensors[TEMP_R].raw;
+   sensors[BATTVOLTS].raw_filt = sensors[BATTVOLTS].raw;
+   sensors[ADC_CH1].raw_filt = sensors[ADC_CH1].raw;
+   sensors[ADC_CH2].raw_filt = sensors[ADC_CH2].raw;
+   sensors[ADC_CH3].raw_filt = sensors[ADC_CH3].raw;
+
+   m_floats[MF_DENSITY] = 0.0023769; //slugs/ft^3
+
+   //{50, 124, 137, 0, 237, 217, 104, 119, 0, 0,
+   g_crc_seeds[0] = 50;
+   g_crc_seeds[1] = 124;
+   g_crc_seeds[2] = 137;
+   g_crc_seeds[3] = 0;
+   g_crc_seeds[4] = 237;
+   g_crc_seeds[5] = 217;
+   g_crc_seeds[6] = 104;
+   g_crc_seeds[7] = 119;
+   g_crc_seeds[8] = 0;
+   g_crc_seeds[9] = 0;
+   //0, 89, 0, 0, 0, 0, 0, 0, 0, 0,
+   g_crc_seeds[10] = 0;
+   g_crc_seeds[11] = 89;
+   //214, 159, 220, 168, 24, 23, 170, 144, 67, 115,
+   g_crc_seeds[20] = 214;
+   g_crc_seeds[21] = 159;
+   g_crc_seeds[22] = 220;
+   g_crc_seeds[23] = 168;
+   g_crc_seeds[24] = 24;
+   g_crc_seeds[25] = 23;
+   g_crc_seeds[26] = 170;
+   g_crc_seeds[27] = 144;
+   g_crc_seeds[28] = 67;
+   g_crc_seeds[29] = 115;
+   //39, 246, 185, 104, 237, 244, 222, 212, 9, 254,
+   g_crc_seeds[30] = 39;
+   g_crc_seeds[31] = 246;
+   g_crc_seeds[32] = 185;
+   g_crc_seeds[33] = 104;
+   g_crc_seeds[34] = 237;
+   g_crc_seeds[35] = 244;
+   g_crc_seeds[36] = 222;
+   g_crc_seeds[37] = 212;
+   g_crc_seeds[38] = 9;
+   g_crc_seeds[39] = 254;
+   //230, 28, 28, 132, 221, 232, 11, 153, 41, 39,
+   g_crc_seeds[40] = 230;
+   g_crc_seeds[41] = 28;
+   g_crc_seeds[42] = 28;
+   g_crc_seeds[43] = 132;
+   g_crc_seeds[44] = 221;
+   g_crc_seeds[45] = 232;
+   g_crc_seeds[46] = 11;
+   g_crc_seeds[47] = 153;
+   g_crc_seeds[48] = 41;
+   g_crc_seeds[49] = 39;
+   //214, 223, 141, 33, 15, 3, 100, 24, 239, 238,
+   g_crc_seeds[50] = 214;
+   g_crc_seeds[51] = 223;
+   g_crc_seeds[52] = 141;
+   g_crc_seeds[53] = 33;
+   g_crc_seeds[54] = 15;
+   g_crc_seeds[55] = 3;
+   g_crc_seeds[56] = 100;
+   g_crc_seeds[57] = 24;
+   g_crc_seeds[58] = 239;
+   g_crc_seeds[59] = 238;
+   //0, 0, 183, 0, 130, 0, 148, 21, 0, 52,
+   g_crc_seeds[60] = 0;
+   g_crc_seeds[61] = 0;
+   g_crc_seeds[62] = 183;
+   g_crc_seeds[63] = 0;
+   g_crc_seeds[64] = 130;
+   g_crc_seeds[65] = 0;
+   g_crc_seeds[66] = 148;
+   g_crc_seeds[67] = 21;
+   g_crc_seeds[68] = 0;
+   g_crc_seeds[69] = 52;
+   //124, 0, 0, 0, 20, 0, 152, 143, 0, 0,
+   g_crc_seeds[70] = 124;
+   g_crc_seeds[71] = 0;
+   g_crc_seeds[72] = 0;
+   g_crc_seeds[73] = 0;
+   g_crc_seeds[74] = 20;
+   g_crc_seeds[75] = 0;
+   g_crc_seeds[76] = 152;
+   g_crc_seeds[77] = 143;
+   g_crc_seeds[78] = 0;
+   g_crc_seeds[79] = 0;
+   //0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   //183, 63, 54, 0, 0, 0, 0, 0, 0, 0,
+   g_crc_seeds[90] = 183;
+   g_crc_seeds[91] = 63;
+   g_crc_seeds[92] = 54;
+   //0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	//0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   //0, 0, 0, 0, 0, 0, 0, 0, 0, 204,
+   g_crc_seeds[249] = 204;
+   //49, 170, 44, 83, 46, 247};
+   g_crc_seeds[250] = 49;
+   g_crc_seeds[251] = 170;
+   g_crc_seeds[252] = 44;
+   g_crc_seeds[253] = 83;
+   g_crc_seeds[254] = 46;
+   g_crc_seeds[255] = 247;
+
+   memcpy(&m_floats[MF_GPS_LAT],&g_cmds[0].x,sizeof(g_cmds[0].x));
+   memcpy(&m_floats[MF_GPS_LON],&g_cmds[0].y,sizeof(g_cmds[0].y));
+
+#ifdef USE_MTEK_GPS
+init_mtk_gps();
+#endif
+#ifndef USE_MTEK_GPS
+init_ublox_gps();
+#endif
+
+#ifdef USE_SD_LOGGER
+init_datalogger();
+#endif
+
+init_stack(&g_cmd_stack);
+
+}//end of Init_Ateryx
+
+/*** BeginHeader */
+#endif
+/*** EndHeader */

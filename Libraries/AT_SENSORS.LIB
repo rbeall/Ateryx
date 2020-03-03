@@ -1,0 +1,443 @@
+/*** BeginHeader gather_sensors */
+#define ADC_ACCEL_X	4
+#define ADC_ACCEL_Y	2
+#define ADC_ACCEL_Z	0
+#define ADC_GYRO_P	6
+#define ADC_GYRO_Q	1
+#define ADC_GYRO_R	5
+#define ADC_DIFPRES  7
+#define ADC_ABSPRES  3
+
+#define ADC_BATT     1
+#define ADC_TEMP_P	4
+#define ADC_TEMP_Q	2
+#define ADC_TEMP_R	3
+#define ADC_CHAN_1	5
+#define ADC_CHAN_2	6
+#define ADC_CHAN_3	7
+
+
+#define ADC_ACCEL_DMAX		2.5
+#define ADC_GYROS_DMAX		2.5
+#define ADC_DIFPRES_DMAX	0.5
+#define ADC_ABSPRES_DMAX	0.1
+#define ADC_TEMP_DMAX		0.5
+#define ADC_BATT_DMAX		0.5
+#define ADC_CH1_DMAX       2.0
+#define ADC_CH2_DMAX       0.5
+#define ADC_CH3_DMAX       0.5
+
+#define LPF_CORNER_FREQ_TEMP    0.5   	// (Hz) low pass filter corner freq for Temperature Sensors
+#define LPF_CORNER_FREQ_ABS     2   	// (Hz) low pass filter corner freq for absolute pressure
+#define LPF_CORNER_FREQ_DIF     4   	// (Hz) low pass filter corner freq for differential pressure
+#define LPF_CORNER_FREQ_ACCEL   250 	// (Hz) low pass filter corner freq for accelerometers
+#define LPF_CORNER_FREQ_GYROS   500  	// (Hz) low pass filter corner freq for gyros
+#define LPF_CORNER_FREQ_EXTRA   5    	// (Hz) low pass filter corner freq for channesl 1,2,3 external
+
+#define TEMP_ADC_TO_CELCIUS 119.047619
+#define TEMP_CELCIUS_OFFSET 272.15
+
+#define D_PRESS_SLOPE 0.4978
+#define S_PRESS_SLOPE -2.279
+#define INHG2PSI 0.491098
+
+#define SONAR_SLOPE 8.58484 //ft/v
+
+#use "AT_FLASH.LIB"
+void gather_sensors(void);
+/*** EndHeader */
+void gather_sensors(void)
+{
+      float temp,alpha;
+
+#GLOBAL_INIT{
+    sensors[DIFPRES].raw_filt = 0;
+    sensors[ABSPRES].raw_filt = 0;
+	}
+
+      //Get raw voltages
+      sensors[ACCEL_X].raw = (float)get_ads8344(ADC_ACCEL_X) * A2D_16BIT_SCALE;
+      sensors[ACCEL_Y].raw = (float)get_ads8344(ADC_ACCEL_Y) * A2D_16BIT_SCALE;
+      sensors[ACCEL_Z].raw = (float)get_ads8344(ADC_ACCEL_Z) * A2D_16BIT_SCALE;
+      sensors[GYRO_P].raw = (float)get_ads8344(ADC_GYRO_P) * A2D_16BIT_SCALE;
+      sensors[GYRO_Q].raw = (float)get_ads8344(ADC_GYRO_Q) * A2D_16BIT_SCALE;
+      sensors[GYRO_R].raw = (float)get_ads8344(ADC_GYRO_R) * A2D_16BIT_SCALE;
+      sensors[DIFPRES].raw = (float)get_ads8344(ADC_DIFPRES) * A2D_16BIT_SCALE;
+      sensors[ABSPRES].raw = (float)get_ads8344(ADC_ABSPRES) * A2D_16BIT_SCALE;
+      sensors[TEMP_P].raw  = (float)get_ads7870(ADC_TEMP_P) * A2D_12BIT_SCALE * RES_DIV_TEMP;
+		sensors[TEMP_Q].raw  = (float)get_ads7870(ADC_TEMP_Q) * A2D_12BIT_SCALE * RES_DIV_TEMP;
+		sensors[TEMP_R].raw  = (float)get_ads7870(ADC_TEMP_R) * A2D_12BIT_SCALE * RES_DIV_TEMP;
+      sensors[TEMP_R].raw  = (float)get_ads7870(ADC_TEMP_R) * A2D_12BIT_SCALE * RES_DIV_TEMP;
+      sensors[ADC_CH1].raw  = (float)get_ads7870(ADC_CHAN_1) * A2D_12BIT_SCALE * RES_DIV_ANALOG;
+      sensors[ADC_CH2].raw  = (float)get_ads7870(ADC_CHAN_2) * A2D_12BIT_SCALE * RES_DIV_ANALOG;
+      sensors[ADC_CH3].raw  = (float)get_ads7870(ADC_CHAN_3) * A2D_12BIT_SCALE * RES_DIV_ANALOG;
+
+      //Restrict sensors derivatives
+      if ((sensors[ACCEL_X].raw - sensors[ACCEL_X].raw_filt) > ADC_ACCEL_DMAX || (sensors[ACCEL_X].raw - sensors[ACCEL_X].raw_filt) < -ADC_ACCEL_DMAX)
+      	{
+         	sensors[ACCEL_X].raw = sensors[ACCEL_X].raw_filt;
+         }
+      if ((sensors[ACCEL_Y].raw - sensors[ACCEL_Y].raw_filt) > ADC_ACCEL_DMAX || (sensors[ACCEL_Y].raw - sensors[ACCEL_Y].raw_filt) < -ADC_ACCEL_DMAX)
+      	{
+         	sensors[ACCEL_Y].raw = sensors[ACCEL_Y].raw_filt;
+         }
+      if ((sensors[ACCEL_Z].raw - sensors[ACCEL_Z].raw_filt) > ADC_ACCEL_DMAX || (sensors[ACCEL_Z].raw - sensors[ACCEL_Z].raw_filt) < -ADC_ACCEL_DMAX)
+      	{
+         	sensors[ACCEL_Z].raw = sensors[ACCEL_Z].raw_filt;
+         }
+      if ((sensors[GYRO_P].raw - sensors[GYRO_P].raw_filt) > ADC_GYROS_DMAX || (sensors[GYRO_P].raw - sensors[GYRO_P].raw_filt) < -ADC_GYROS_DMAX)
+      	{
+         	sensors[GYRO_P].raw = sensors[GYRO_P].raw_filt;
+         }
+      if ((sensors[GYRO_Q].raw - sensors[GYRO_Q].raw_filt) > ADC_GYROS_DMAX || (sensors[GYRO_Q].raw - sensors[GYRO_Q].raw_filt) < -ADC_GYROS_DMAX)
+      	{
+         	sensors[GYRO_Q].raw = sensors[GYRO_Q].raw_filt;
+         }
+      if ((sensors[GYRO_R].raw - sensors[GYRO_R].raw_filt) > ADC_GYROS_DMAX || (sensors[GYRO_R].raw - sensors[GYRO_R].raw_filt) < -ADC_GYROS_DMAX)
+      	{
+         	sensors[GYRO_R].raw = sensors[GYRO_R].raw_filt;
+         }
+      if ((sensors[DIFPRES].raw - sensors[DIFPRES].raw_filt) > ADC_DIFPRES_DMAX || (sensors[DIFPRES].raw - sensors[DIFPRES].raw_filt) < -ADC_DIFPRES_DMAX)
+      	{
+         	sensors[DIFPRES].raw = sensors[DIFPRES].raw_filt;
+         }
+      if ((sensors[ABSPRES].raw - sensors[ABSPRES].raw_filt) > ADC_ABSPRES_DMAX || (sensors[ABSPRES].raw - sensors[ABSPRES].raw_filt) < -ADC_ABSPRES_DMAX)
+      	{
+         	sensors[ABSPRES].raw = sensors[ABSPRES].raw_filt;
+         }
+      if ((sensors[TEMP_P].raw - sensors[TEMP_P].raw_filt) > ADC_TEMP_DMAX || (sensors[TEMP_P].raw - sensors[TEMP_P].raw_filt) < -ADC_TEMP_DMAX)
+      	{
+         	sensors[TEMP_P].raw = sensors[TEMP_P].raw_filt;
+         }
+      if ((sensors[TEMP_Q].raw - sensors[TEMP_Q].raw_filt) > ADC_TEMP_DMAX || (sensors[TEMP_Q].raw - sensors[TEMP_Q].raw_filt) < -ADC_TEMP_DMAX)
+      	{
+         	sensors[TEMP_Q].raw = sensors[TEMP_Q].raw_filt;
+         }
+      if ((sensors[TEMP_R].raw - sensors[TEMP_R].raw_filt) > ADC_TEMP_DMAX || (sensors[TEMP_R].raw - sensors[TEMP_R].raw_filt) < -ADC_TEMP_DMAX)
+      	{
+         	sensors[TEMP_R].raw = sensors[TEMP_R].raw_filt;
+         }
+      if ((sensors[ADC_CH1].raw - sensors[ADC_CH1].raw_filt) > ADC_CH1_DMAX || (sensors[ADC_CH1].raw - sensors[ADC_CH1].raw_filt) < -ADC_CH1_DMAX)
+      	{
+         	sensors[ADC_CH1].raw = sensors[ADC_CH1].raw_filt;
+         }
+      if ((sensors[ADC_CH2].raw - sensors[ADC_CH2].raw_filt) > ADC_CH2_DMAX || (sensors[ADC_CH2].raw - sensors[ADC_CH2].raw_filt) < -ADC_CH2_DMAX)
+      	{
+         	sensors[ADC_CH2].raw = sensors[ADC_CH2].raw_filt;
+         }
+      if ((sensors[ADC_CH3].raw - sensors[ADC_CH3].raw_filt) > ADC_CH3_DMAX || (sensors[ADC_CH3].raw - sensors[ADC_CH3].raw_filt) < -ADC_CH3_DMAX)
+      	{
+         	sensors[ADC_CH3].raw = sensors[ADC_CH3].raw_filt;
+         }
+
+      //Low Pass Filter
+      temp = m_floats[MF_DT] * LPF_CORNER_FREQ_ACCEL;
+      alpha = temp/(1+temp);
+      sensors[ACCEL_X].raw_filt = (1-alpha)*sensors[ACCEL_X].raw_filt + (alpha)*sensors[ACCEL_X].raw;                                                         // accelerometers
+      sensors[ACCEL_Y].raw_filt = (1-alpha)*sensors[ACCEL_Y].raw_filt + (alpha)*sensors[ACCEL_Y].raw;
+      sensors[ACCEL_Z].raw_filt = (1-alpha)*sensors[ACCEL_Z].raw_filt + (alpha)*sensors[ACCEL_Z].raw;
+
+      temp = m_floats[MF_DT] * LPF_CORNER_FREQ_GYROS;
+      alpha = temp/(1+temp);
+      sensors[GYRO_P].raw_filt = (1-alpha)*sensors[GYRO_P].raw_filt + (alpha)*sensors[GYRO_P].raw;
+      sensors[GYRO_Q].raw_filt = (1-alpha)*sensors[GYRO_Q].raw_filt + (alpha)*sensors[GYRO_Q].raw;
+      sensors[GYRO_R].raw_filt = (1-alpha)*sensors[GYRO_R].raw_filt + (alpha)*sensors[GYRO_R].raw;
+
+      temp = m_floats[MF_DT] * LPF_CORNER_FREQ_DIF;
+      alpha = temp/(1+temp);
+      sensors[DIFPRES].raw_filt = (1-alpha)*sensors[DIFPRES].raw_filt + (alpha)*sensors[DIFPRES].raw;
+
+      temp = m_floats[MF_DT] * LPF_CORNER_FREQ_ABS;
+      alpha = temp/(1+temp);
+      sensors[ABSPRES].raw_filt = (1-alpha)*sensors[ABSPRES].raw_filt + (alpha)*sensors[ABSPRES].raw;
+
+      temp = m_floats[MF_DT] * LPF_CORNER_FREQ_TEMP;
+      alpha = temp/(1+temp);
+      sensors[TEMP_P].raw_filt = (1-alpha)*sensors[TEMP_P].raw_filt + (alpha)*sensors[TEMP_P].raw;
+      sensors[TEMP_Q].raw_filt = (1-alpha)*sensors[TEMP_Q].raw_filt + (alpha)*sensors[TEMP_Q].raw;
+      sensors[TEMP_R].raw_filt = (1-alpha)*sensors[TEMP_R].raw_filt + (alpha)*sensors[TEMP_R].raw;
+
+      temp = m_floats[MF_DT] * LPF_CORNER_FREQ_EXTRA;
+      alpha = temp/(1+temp);
+      sensors[ADC_CH1].raw_filt = (1-alpha)*sensors[ADC_CH1].raw_filt + (alpha)*sensors[ADC_CH1].raw;
+      sensors[ADC_CH2].raw_filt = (1-alpha)*sensors[ADC_CH2].raw_filt + (alpha)*sensors[ADC_CH2].raw;
+      sensors[ADC_CH3].raw_filt = (1-alpha)*sensors[ADC_CH3].raw_filt + (alpha)*sensors[ADC_CH3].raw;
+
+      //scale and shift are updated via tempcomp
+      sensors[ACCEL_X].calibrated = (sensors[ACCEL_X].raw - sensors[ACCEL_X].steady)/g_ax_scale;
+      sensors[ACCEL_Y].calibrated = (sensors[ACCEL_Y].raw - sensors[ACCEL_Y].steady)/g_ay_scale;
+      sensors[ACCEL_Z].calibrated = (sensors[ACCEL_Z].raw - sensors[ACCEL_Z].steady)/g_az_scale;
+      sensors[GYRO_P].calibrated = ((sensors[GYRO_P].raw - sensors[GYRO_P].steady)/0.005)*DEG2RAD;
+      sensors[GYRO_Q].calibrated = ((sensors[GYRO_Q].raw - sensors[GYRO_Q].steady)/0.005)*DEG2RAD;
+      sensors[GYRO_R].calibrated = ((sensors[GYRO_R].raw - sensors[GYRO_R].steady)/0.005)*DEG2RAD;
+      sensors[DIFPRES].calibrated = (sensors[DIFPRES].raw_filt - sensors[DIFPRES].steady)*D_PRESS_SLOPE;
+      sensors[ABSPRES].calibrated = (sensors[ABSPRES].raw_filt - sensors[ABSPRES].steady)*S_PRESS_SLOPE + ram_UAV_limits[UL_ABS_PRESS_INT];
+      sensors[TEMP_P].calibrated = (sensors[TEMP_P].raw_filt * TEMP_ADC_TO_CELCIUS) - TEMP_CELCIUS_OFFSET;
+      sensors[TEMP_Q].calibrated = (sensors[TEMP_Q].raw_filt * TEMP_ADC_TO_CELCIUS) - TEMP_CELCIUS_OFFSET;
+      sensors[TEMP_R].calibrated = (sensors[TEMP_R].raw_filt * TEMP_ADC_TO_CELCIUS) - TEMP_CELCIUS_OFFSET;
+
+      sensors[ADC_CH1].calibrated = sensors[ADC_CH1].raw_filt;
+      sensors[ADC_CH2].calibrated = sensors[ADC_CH2].raw_filt;
+      sensors[ADC_CH3].calibrated = sensors[ADC_CH3].raw_filt;
+
+#ifdef USE_SONAR_ALTITUDE
+      m_floats[MF_HEIGHT_ABOVE_TERRAIN] = sensors[ADC_CH1].calibrated*SONAR_SLOPE;
+#endif
+
+      m_floats[MF_AX] = sensors[ACCEL_X].calibrated;
+      m_floats[MF_AY] = sensors[ACCEL_Y].calibrated;
+      m_floats[MF_AZ] = sensors[ACCEL_Z].calibrated;
+
+      m_floats[MF_GYRO_P] = sensors[GYRO_P].calibrated;
+      m_floats[MF_GYRO_Q] = sensors[GYRO_Q].calibrated;
+      m_floats[MF_GYRO_R] = sensors[GYRO_R].calibrated;
+
+      if (sensors[DIFPRES].calibrated < 0)
+      	{
+         	m_floats[MF_INDICATED_AIRSPEED] = -sqrt(-2*sensors[DIFPRES].calibrated*144/m_floats[MF_DENSITY]);    				//airspeed in fps
+         }
+         else
+         {
+         	m_floats[MF_INDICATED_AIRSPEED] = sqrt(2*sensors[DIFPRES].calibrated*144/m_floats[MF_DENSITY]);
+         }
+      m_floats[MF_INDICATED_AIRSPEED] *= FT2MET;
+
+
+      m_floats[MF_ALT_MSL] = AT_poly(sensors[ABSPRES].calibrated,2,&g_press_to_alt[0]) * FT2MET;//in meters
+
+}
+
+/*** BeginHeader zero_pressure */
+void zero_pressure(char flag);
+/*** EndHeader */
+
+void zero_pressure(char flag)
+{
+   int i;
+   float A0,B1;
+   float d_press_volts_avg;
+   float a_press_volts_avg;
+
+   A0 = 0.999;
+   B1 = 1-A0;
+
+   if (flag == 1)// && airspeed < 25 && SOG[0] < 25)
+      	{
+              d_press_volts_avg =(float)get_ads8344(ADC_DIFPRES) * A2D_16BIT_SCALE;
+         	  a_press_volts_avg =(float)get_ads8344(ADC_ABSPRES) * A2D_16BIT_SCALE;
+
+           for (i=0;i<AVG_SAMPLES;i++)
+               {
+                    d_press_volts_avg = A0*d_press_volts_avg + B1*(float)get_ads8344(ADC_DIFPRES) * A2D_16BIT_SCALE;
+                    a_press_volts_avg = A0*a_press_volts_avg + B1*(float)get_ads8344(ADC_ABSPRES) * A2D_16BIT_SCALE;
+               }//end for
+
+           g_tc.dp[0] = d_press_volts_avg-(sensors[TEMP_R].calibrated*sensors[TEMP_R].calibrated*g_tc.dp[2])-(sensors[TEMP_R].calibrated*g_tc.dp[1]);
+			  sensors[DIFPRES].steady = AT_poly(sensors[TEMP_R].calibrated,2,&g_tc.dp[0]);
+
+           //Rebase Tempcomp voltage delta
+           g_tc.ap[0] = -(g_tc.ap[2]*sensors[TEMP_R].calibrated*sensors[TEMP_R].calibrated)-(g_tc.ap[1]*sensors[TEMP_R].calibrated);
+           sensors[ABSPRES].steady = AT_poly(sensors[TEMP_R].calibrated,2,&g_tc.ap[0]);
+           //Rebase Pressure calibration to actual pressure
+           ram_UAV_limits[UL_ABS_PRESS_INT] = (ram_UAV_limits[UL_FIELD_ATM_PRESS]*INHG2PSI) - (S_PRESS_SLOPE * sensors[ABSPRES].raw_filt);
+           sensors[ABSPRES].calibrated = (sensors[ABSPRES].raw_filt - sensors[ABSPRES].steady)*S_PRESS_SLOPE + ram_UAV_limits[UL_ABS_PRESS_INT];
+           //Rebase Altitude calibration to actual field elevation
+           g_press_to_alt[0] = (ram_UAV_limits[UL_FIELD_ELEVATION]*MET2FT) - (g_press_to_alt[2]*sensors[ABSPRES].calibrated*sensors[ABSPRES].calibrated) - (g_press_to_alt[1]*sensors[ABSPRES].calibrated);
+           m_floats[MF_ALT_MSL] = AT_poly(sensors[ABSPRES].calibrated,2,&g_press_to_alt[0]) * FT2MET;
+
+         }//end if
+}//end zero_pressure
+
+/*** BeginHeader zero_attitude */
+void zero_attitude(char flag);
+/*** EndHeader */
+
+void zero_attitude(char flag)
+{
+   int i;
+
+   float x_accel_offset;
+   float y_accel_offset;
+   float z_accel_offset;
+   float p_gyro_offset;
+   float q_gyro_offset;
+   float r_gyro_offset;
+
+   if (flag == 1)// && airspeed < 25 && SOG[0] < 25)
+      	{
+
+           x_accel_offset = sensors[ACCEL_X].raw_filt;
+           for (i=0;i<AVG_SAMPLES;i++)
+               {
+                  x_accel_offset += sensors[ACCEL_X].raw_filt;
+                  x_accel_offset /=2;
+                  y_accel_offset += sensors[ACCEL_Y].raw_filt;
+                  y_accel_offset /=2;
+                  //z_accel_offset += sensors[ACCEL_Z].raw_filt;
+                  //z_accel_offset /=2;
+
+                  p_gyro_offset += sensors[GYRO_P].raw_filt;
+                  p_gyro_offset /= 2;
+                  q_gyro_offset += sensors[GYRO_Q].raw_filt;
+                  q_gyro_offset /= 2;
+                  r_gyro_offset += sensors[GYRO_R].raw_filt;
+                  r_gyro_offset /= 2;
+
+               }//end for
+
+	            g_tc.ax[AX_SHIFT0] = x_accel_offset-(sensors[TEMP_R].calibrated*g_tc.ax[AX_SHIFT1]);
+               g_tc.ay[AY_SHIFT0] = y_accel_offset-(sensors[TEMP_R].calibrated*g_tc.ay[AY_SHIFT1]);
+               //g_tc.az[AZ_SHIFT0] = z_accel_offset-(sensors[TEMP_R].calibrated*g_tc.az[AZ_SHIFT1]);
+
+               g_tc.p[0] = p_gyro_offset-(sensors[TEMP_P].calibrated*sensors[TEMP_P].calibrated*g_tc.p[2])-(sensors[TEMP_P].calibrated*g_tc.p[1]);
+               g_tc.q[0] = q_gyro_offset-(sensors[TEMP_Q].calibrated*sensors[TEMP_Q].calibrated*g_tc.q[2])-(sensors[TEMP_Q].calibrated*g_tc.q[1]);
+               g_tc.r[0] = r_gyro_offset-(sensors[TEMP_R].calibrated*sensors[TEMP_R].calibrated*g_tc.r[2])-(sensors[TEMP_R].calibrated*g_tc.r[1]);
+
+              	sensors[ACCEL_X].steady = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.ax[AX_SHIFT0]);
+               sensors[ACCEL_Y].steady = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.ay[AY_SHIFT0]);
+               //sensors[ACCEL_Z].steady = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.az[AZ_SHIFT0]);
+
+               sensors[GYRO_P].steady = AT_poly(sensors[TEMP_P].calibrated,2,&g_tc.p[0]);
+   				sensors[GYRO_Q].steady = AT_poly(sensors[TEMP_Q].calibrated,2,&g_tc.q[0]);
+   				sensors[GYRO_R].steady = AT_poly(sensors[TEMP_R].calibrated,2,&g_tc.r[0]);
+         }//end if
+}//end zero_pressure
+
+/*** BeginHeader cof_temp_comp */
+scofunc void cof_temp_comp();
+/*** EndHeader */
+
+/* START FUNCTION DESCRIPTION ********************************************
+cof_temp_comp		 <SENSORS.LIB>
+
+DESCRIPTION: Cofunction that calculates all of the temp comp equations
+
+RETURN VALUE: None.
+
+END DESCRIPTION **********************************************************/
+nodebug
+scofunc void cof_temp_comp()
+{
+    auto long cur_rtc;
+    static long old_rtc;
+    auto float time_since_main_loop_start;
+
+    waitfor(DelayMs(500));
+    while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_TEMP_COMP_TIME_SLOT)
+            break;
+        else
+            yield;
+    }
+    old_rtc = MS_TIMER;
+
+	//Calculate steady state voltages for tempcomp offsets
+   g_ax_scale = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.ax[AX_SCALE0]);
+   g_ay_scale = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.ay[AY_SCALE0]);
+   g_az_scale = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.az[AZ_SCALE0]);
+   sensors[ACCEL_X].steady = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.ax[AX_SHIFT0]);
+   sensors[ACCEL_Y].steady = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.ay[AY_SHIFT0]);
+   sensors[ACCEL_Z].steady = AT_poly(sensors[TEMP_R].calibrated,1,&g_tc.az[AZ_SHIFT0]);
+	sensors[GYRO_P].steady = AT_poly(sensors[TEMP_P].calibrated,2,&g_tc.p[0]);
+   sensors[GYRO_Q].steady = AT_poly(sensors[TEMP_Q].calibrated,2,&g_tc.q[0]);
+   sensors[GYRO_R].steady = AT_poly(sensors[TEMP_R].calibrated,2,&g_tc.r[0]);
+   sensors[DIFPRES].steady = AT_poly(sensors[TEMP_R].calibrated,2,&g_tc.dp[0]);
+   sensors[ABSPRES].steady = AT_poly(sensors[TEMP_R].calibrated,2,&g_tc.ap[0]);
+
+}//end cof_temp_comp
+
+/*** BeginHeader cof_power */
+#define LPF_BATTVOLTS 5
+scofunc void cof_power();
+/*** EndHeader */
+nodebug
+scofunc void cof_power()
+{
+   float temp,alpha;
+   auto long cur_rtc;
+   auto float time_since_main_loop_start;
+
+   waitfor(DelayMs(1000));
+
+   while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_POWER_TIME_SLOT)
+            break;
+        else
+            yield;
+    }
+
+ 	 sensors[BATTVOLTS].raw  = (float)get_ads7870(ADC_BATT) * A2D_12BIT_SCALE * RES_DIV_BATT;
+
+    if ((sensors[BATTVOLTS].raw - sensors[BATTVOLTS].raw_filt) > ADC_BATT_DMAX || (sensors[BATTVOLTS].raw - sensors[BATTVOLTS].raw_filt) < -ADC_BATT_DMAX)
+	         {
+	            sensors[BATTVOLTS].raw = sensors[BATTVOLTS].raw_filt;
+	         }
+	 temp = m_floats[MF_DT] * LPF_BATTVOLTS;
+	 alpha = temp/(1+temp);
+	 sensors[BATTVOLTS].raw_filt = (1-alpha)*sensors[BATTVOLTS].raw_filt + (alpha)*sensors[BATTVOLTS].raw;
+	 sensors[BATTVOLTS].calibrated = sensors[BATTVOLTS].raw_filt;
+
+	 m_floats[MF_BATTERY_VOLTAGE] = sensors[BATTVOLTS].calibrated;
+
+    //Approximate battery percentage based on 3 cell lipo (0-100.0)
+    m_floats[MF_BATTERY_PERCENT] = (atan((sensors[BATTVOLTS].calibrated-11.2)*2.5)+1.37)*37.55869;
+
+}//end cof_power
+
+/*** BeginHeader get_ads8344 */
+unsigned int get_ads8344(int chan);
+/*** EndHeader */
+
+//--------------read 16bit a2d---------------
+unsigned int get_ads8344(int chan)		//reads 16bit a2d for a given channel
+{
+unsigned char ch_result[4];	//spi buffer
+char cword[4];						//command word
+unsigned int A2Dres;				//16 bit result
+
+	cword[0] = 0x84; //Start bit, single
+	cword[0] += (chan << 4);	// + MSB of chan
+   cword[0] |= 0x03;	//powerdown pins low (power downmode)
+
+	cword[1] = 0; 					//zeros the extra control word characters
+ 	cword[2] = 0;
+	cword[3] = 0;
+
+   BitWrPortI(PBDR,&PBDRShadow,0,4);	//PB4, Take CS1/SHDN Pin LOW to Start Conversion
+   SPIWrRd(&cword, &ch_result, 4); 		//4 byte transfer to and from A2D
+   BitWrPortI(PBDR,&PBDRShadow,1,4);	//Take CS1/SHDN Pin High to End Conversion
+
+   A2Dres = ch_result[1] << 9; 			//shift msbyte over
+   A2Dres += ch_result[2] << 1;			//shifts lsbyte over
+    if((ch_result[3] & 0x80) == 0x80)  //places lsbit
+      A2Dres += 1;
+    else
+      A2Dres &= 0xFFFE;
+
+	return A2Dres;
+
+}//end a2d
+
+
+/*** BeginHeader get_ads7870 */
+unsigned int get_ads7870(int chan);
+/*** EndHeader */
+
+//--------------read 12bit a2d---------------
+unsigned int get_ads7870(int chan)
+{
+unsigned int cmd;						//command word
+unsigned int A2Dres_b;				//12 bit result
+
+	cmd = 0x80|(GAINSET*16+(chan|0x08));
+   A2Dres_b = anaInDriver(cmd, 12);
+
+	return A2Dres_b;
+
+}//end get_ads7870

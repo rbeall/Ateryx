@@ -1,0 +1,355 @@
+/*** BeginHeader */
+#ifndef __ATERYX2_LIB
+#define __ATERYX2_LIB
+/*** EndHeader */
+
+/* START LIBRARY DESCRIPTION *********************************************
+
+
+END DESCRIPTION *********************************************************/
+/*** BeginHeader cof_debug_prints ***/
+scofunc void cof_debug_prints();
+/*** EndHeader ***/
+nodebug
+scofunc void cof_debug_prints()
+{
+
+  //paledon(GPS_Led)
+  waitfor(DelayMs(200));
+  //printf("\r %f",m_floats[MF_DT]);
+  //printf("\r %f %f %f %f %f %f",sensors[ACCEL_X].raw,sensors[ACCEL_X].raw_filt,sensors[ACCEL_Y].raw,sensors[ACCEL_Y].raw_filt,sensors[ACCEL_Z].raw,sensors[ACCEL_Z].raw_filt);
+  //printf("\r %f %f %f %f %f %f",sensors[GYRO_P].raw,sensors[GYRO_P].raw_filt,sensors[GYRO_Q].raw,sensors[GYRO_Q].raw_filt,sensors[GYRO_R].raw,sensors[GYRO_R].raw_filt);
+  //printf("\r %f %f %f %f",sensors[DIFPRES].raw,sensors[DIFPRES].raw_filt,sensors[ABSPRES].raw,sensors[ABSPRES].raw_filt);
+  //printf("\r %f %f", m_floats[MF_INDICATED_AIRSPEED], sensors[DIFPRES].calibrated);
+  printf("\r %f %f %f %f",m_floats[MF_ALT_MSL],sensors[ABSPRES].calibrated,sensors[ABSPRES].raw,sensors[ABSPRES].raw_filt);
+  //printf("\r %f %f %f %f %f %f",sensors[TEMP_P].raw,sensors[TEMP_P].raw_filt,sensors[TEMP_Q].raw,sensors[TEMP_Q].raw_filt,sensors[TEMP_R].raw,sensors[TEMP_R].raw_filt);
+
+  //printf("\r g_tc.ax[scale0]= %f g_tc.ax[scale1]= %f",g_tc.ax[AX_SCALE0],g_tc.ax[AX_SCALE1]);
+  //printf("\r %f %f %f",sensors[ACCEL_X].calibrated,sensors[ACCEL_Y].calibrated,sensors[ACCEL_Z].calibrated);
+  //printf("\r %f %f %f",sensors[GYRO_P].calibrated,sensors[GYRO_Q].calibrated,sensors[GYRO_R].calibrated);
+  //printf("\r %f %f",sensors[DIFPRES].calibrated,sensors[ABSPRES].calibrated);
+  //printf("\r %f %f %f",sensors[TEMP_P].calibrated,sensors[TEMP_Q].calibrated,sensors[TEMP_R].calibrated);
+
+  //printf("\r %f %f",m_floats[MF_MAG_X],m_floats[MF_MAG_Y]);
+
+  //printf("\r %f %f %f %f", q0, q1, q2, q3);
+
+  //printf("\r\n %d %f %f",m_bytes[MB_GPS_FIX_QUALITY],m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+
+  //printf("\r %f %f %f", m_floats[MF_PHI]*RAD2DEG,m_floats[MF_THETA]*RAD2DEG,m_floats[MF_PSI]*RAD2DEG);
+  //printf("\r %f %f",m_floats[MF_BATTERY_VOLTAGE],sensors[BATTVOLTS].raw  = (float)get_ads7870(ADC_BATT) * A2D_12BIT_SCALE * RES_DIV_BATT);
+  //printf("\r %f",m_floats[MF_DEBUG_1]);
+
+  //printf("\r roll_rate_kp= %f roll_kp= %f", g_PIDS[PID_roll_rate].kp, g_PIDS[PID_roll].kp);
+  //printf("\r pitch_kp= %f roll_kp= %f", g_PIDS[PID_pitch].kp, g_PIDS[PID_roll].kp);
+  //printf("\r size of g_tc= %d",sizeof(g_tc));
+}//end cof_debug_prints
+
+/*** BeginHeader cof_check_if_airborne */
+scofunc void cof_check_if_airborne();
+/*** EndHeader */
+nodebug
+scofunc void cof_check_if_airborne()
+{
+   auto long cur_rtc,old_rtc;
+   auto float time_since_main_loop_start;
+
+   waitfor(DelayMs(1000));
+
+   while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_AIRBORNE_DETECT_TIME_SLOT)
+            break;
+        else
+            yield;
+    }
+
+    m_bytes[MB_AIRBORNE] = 0;
+    if( (m_floats[MF_GPS_SPEED]>3.0) && (m_floats[MF_INDICATED_AIRSPEED]>3.0) && (m_floats[MF_ALT_MSL]> 15.24) )
+    	{
+      	m_bytes[MB_AIRBORNE] = 1;
+      }
+
+}//end cof_check_if_airborne
+/*** BeginHeader MsDelay */
+void MsDelay(int MS);
+/*** EndHeader */
+void MsDelay(int MS)
+{
+   long SavTimer, TimerDiff;
+   TimerDiff = 0;
+   SavTimer = MS_TIMER;
+   while(TimerDiff < MS) {TimerDiff = MS_TIMER - SavTimer;}
+}// end of MsDelay
+
+/*** BeginHeader paledon */
+void paledon(int led);
+/*** EndHeader */
+
+void paledon(int led)        	//turns on leds
+{
+   //printf("\r led on");
+   BitWrPortI(PADR, &PADRShadow, 1, led);
+}
+
+/*** BeginHeader paledoff */
+void paledoff(int led);
+/*** EndHeader */
+
+void paledoff(int led)        	//turns on leds
+{
+   //printf("\r led off");
+   BitWrPortI(PADR, &PADRShadow, 0, led);
+
+}
+/*** BeginHeader cof_blink_led */
+cofunc void cof_blink_led(int time_on, int led, int flag);
+/*** EndHeader */
+cofunc void cof_blink_led(int time_on, int led, int flag)
+{
+  if (flag == 1)
+   {
+   	paledon(led);
+   	waitfor(DelayMs(time_on));
+   	paledoff(led);
+      waitfor(DelayMs(time_on));
+   }
+}
+
+/*** BeginHeader led_tester */
+void led_tester(void);
+/*** EndHeader */
+
+void led_tester(void)
+	{
+	paledon(Rx_led);
+	MsDelay(30);
+	paledoff(Rx_led);
+	MsDelay(30);
+
+	paledon(Tx_led);
+	MsDelay(30);
+	paledoff(Tx_led);
+	MsDelay(30);
+
+	paledon(GPS_led);
+	MsDelay(30);
+	paledoff(GPS_led);
+	MsDelay(30);
+
+	}//end led_tester
+
+ /*** BeginHeader setup_timerb_isr */
+void setup_timerb_isr(void);
+/*** EndHeader */
+
+void setup_timerb_isr(void)
+{
+SetVectIntern(0x0B, timerb_isr);   			// Set up vector to ISR
+SetVectIntern(0x0B, GetVectIntern(0xB));
+
+WrPortI(TBCR, &TBCRShadow, 0x05); 			//Clock from A1, int level 1
+
+WrPortI(TAT1R, &TAT1RShadow, 0xFF);			//use max prescaler for A1
+
+WrPortI(TBM1R, NULL, 0x00);         		// set initial match
+WrPortI(TBL1R, NULL, 0x00);
+
+WrPortI(TBCSR, &TBCSRShadow, 0x03);			// enable timer B and B1 match interrupt
+
+RdPortI(TBCSR);									//clear interrupt flag
+
+}//end setup_timerb_isr
+
+
+ /*** BeginHeader get_batt_volts */
+void get_batt_volts(void);
+/*** EndHeader */
+
+void get_batt_volts(void)
+{
+
+   float A0,B1;
+   //float batt_volts[2];
+   B1 = 0.98;
+   A0 = 1.0-B1;
+
+   batt_volts[0] = (float)get_ads7870(1) * a2d_12bit_scale * res_div_batt;
+	batt_volts[0] = (A0 * batt_volts[0]) + (B1 * batt_volts[1]);	//first order LP filter
+
+	if (batt_volts[0]-batt_volts[1] > 0.5)		//catch spurius measurements from affecting filter
+   {
+   	batt_volts[0] = batt_volts[1];
+   }
+   batt_volts[1] = batt_volts[0];
+
+}//end get_batt_volts
+
+/*** BeginHeader get_current */
+void get_current(void);
+/*** EndHeader */
+
+void get_current(void)
+{
+   float A0,B1;
+
+   B1 = 0.95;
+   A0 = 1.0-B1;
+
+   current_volts[0] = (float)get_ads7870(6) * a2d_12bit_scale * res_div_current;
+	current_volts[0] = (A0 * current_volts[0]) + (B1 * current_volts[1]);	//first order LP filter
+
+	if (current_volts[0]-current_volts[1] > 0.5)		//catch spurius measurements from affecting filter
+   {
+   	current_volts[0] = current_volts[1];
+   }
+   current_volts[1] = current_volts[0];
+
+   current = (current_volts[0] - 0.474)/0.133; // in Amps
+
+   	T1_current = MS_TIMER;		//determine dt since last read in s
+      dt_current = (T1_current - T0_current)*10e-4;
+      T0_current = T1_current;
+
+   current_used = current_used + current*(dt_current/3600.0);
+
+}//end get_current()
+
+/*** BeginHeader calc_mean */
+float calc_mean(float *float_array, int num_pts);
+/*** EndHeader */
+
+float calc_mean(float *float_array, int num_pts)
+{
+	int i;
+	float mean;
+   float mean_bias; //avergage bias due to rounding
+
+   mean_bias = 0.007817494;
+
+	mean = 0;
+	for(i=0;i<num_pts-1;i++)
+	{
+		mean += float_array[i];
+	}
+	mean /= num_pts;
+   mean = mean+mean_bias;
+	return mean;
+}
+
+/*** BeginHeader abs_float */
+float abs_float(float num);
+/*** EndHeader */
+
+float abs_float(float num)
+	{
+      if (num < 0)
+      	{
+            num = num*-1;
+         }
+   return num;
+   }
+
+/*** BeginHeader flttoa */
+void flttoa(float x, char *str, int prec);
+/*** EndHeader */
+
+void flttoa(float x_in, char *str, int prec)
+{
+	int ie, i, k, ndig;
+   float x;
+
+   x = x_in;
+	ndig = (prec<=0) ? 7: (prec > 22 ? 23: prec+1);
+	ie = 0;
+
+	//If x is negative, write a minus and reverse
+	if(x<0)
+	{
+		*str++ = '-';
+		x = -x;
+	}
+
+	//Put x in range of 1 <= x < 10
+	if(x > 0.0)
+		while(x < 1.0)
+		{
+			x *= 10.0;
+			ie--;
+		}
+	while(x>= 10.0)
+	{
+		x = x/10.0;
+		ie++;
+	}
+	if(ie<0)
+	{
+		*str++ = '0';
+		*str++ = '.';
+		if(ndig < 0)
+			ie = ie - ndig; //limit zeros if underflow
+		for(i=-1;i > ie; i--)
+			*str++ = '0';
+	}
+	for(i=0;i<ndig;i++)
+	{
+		k = (int)x;
+		*str++ = k + '0';
+		if(i==ie)
+			*str++ = '.';
+		x-= k;
+		x*=10;
+	}
+	*str = '\0';
+} //end flttoa
+
+/*** BeginHeader AT_poly ***/
+float AT_poly(float x,int n, float* c);
+/*** EndHeader ***/
+float AT_poly(float x,int n, float* c)
+{
+  float out;
+
+  switch (n)
+  {
+  	  case 1:
+	    {
+	    out = (c[1]*x) + c[0];
+	    }
+	    break;
+	  case 2:
+	    {
+	    out = (c[2]*x*x) + (c[1]*x) + c[0];
+	    }
+	    break;
+	  default:
+	   {
+	     out = 0;
+	   }
+	   break;
+   }
+  return out;
+
+}// end AT_poly
+
+/*** BeginHeader unwrap_angle */
+void unwrap_angle(float* angle);
+/*** EndHeader */
+void unwrap_angle(float* angle)
+{
+	if (*angle > 3.1415926535)
+   	{
+      	*angle -= 6.283185307;
+      }
+   if (*angle < -3.1415926535)
+   	{
+   		*angle += 6.283185307;
+   	}
+}//end unwrap_angle
+
+
+/*** BeginHeader */
+#endif
+/*** EndHeader */

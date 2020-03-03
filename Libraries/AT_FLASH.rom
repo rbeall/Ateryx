@@ -1,0 +1,183 @@
+f3:eac3[  7] -> d9 21 fd ff 00 00 00 
+f3:eaca[  4] -> ef 21 00 00 
+f3:eace[  4] -> ef 21 08 00 
+f3:ead2[  4] -> ef 21 00 00 
+f3:ead6[  4] -> ef 21 00 00 
+f3:eada[  4] -> ef 21 00 00 
+f3:eade[ 14] -> ef 21 01 00 e5 21 00 00 e5 21 01 00 39 e5 00 00 
+                00 00 27 06 
+f3:eaf2[ 1f] -> ef 21 fd ff 39 dd e4 00 26 00 eb 21 18 00 b7 ed 
+                52 cc 00 00 00 21 02 00 39 dd e4 00 26 00 cc 
+f3:eb04[  3] -> c2 11 1b 
+f3:eb11[  4] -> cc 00 00 00 
+f3:eb15[  7] -> ef 00 00 00 00 27 02 
+f3:eb1c[  7] -> ef 21 fd ff 39 36 18 
+f3:eb23[ 14] -> ef 21 01 00 e5 21 ff ff 39 e5 21 00 00 e5 00 00 
+                00 00 27 06 
+f3:eb37[  1] -> ef 
+f3:eb38[  2] -> 00 ef 
+f3:eb3a[  2] -> 00 ef 
+f3:eb3c[  2] -> 00 ef 
+f3:eb3e[  2] -> 00 ef 
+f3:eb40[  2] -> 00 ef 
+f3:eb42[  2] -> 00 ef 
+f3:eb44[  2] -> 00 ef 
+f3:eb46[  2] -> 00 ef 
+f3:eb48[  2] -> 00 ef 
+f3:eb4a[  2] -> 00 ef 
+f3:eb4c[  2] -> 00 ef 
+f3:eb4e[  2] -> 00 ef 
+f3:eb50[  2] -> 00 ef 
+f3:eb52[  2] -> 00 ef 
+f3:eb54[  2] -> 00 ef 
+f3:eb56[  2] -> 00 ef 
+f3:eb58[  2] -> 00 ef 
+f3:eb5a[  2] -> 00 ef 
+f3:eb5c[  2] -> 00 ef 
+f3:eb5e[  2] -> 00 ef 
+f3:eb60[  2] -> 00 ef 
+f3:eb62[  2] -> 00 ef 
+f3:eb64[  2] -> 00 ef 
+f3:eb66[  2] -> 00 ef 
+f3:eb68[  2] -> 00 ef 
+f3:eb6a[  2] -> 00 ef 
+f3:eb6c[  2] -> 00 ef 
+f3:eb6e[  2] -> 00 ef 
+f3:eb70[  2] -> 00 ef 
+f3:eb72[  2] -> 00 ef 
+f3:eb74[  2] -> 00 ef 
+f3:eb76[  2] -> 00 ef 
+f3:eb78[  2] -> 00 ef 
+f3:eb7a[  2] -> 00 ef 
+f3:eb7c[  2] -> 00 ef 
+f3:eb7e[  2] -> 00 ef 
+f3:eb80[  2] -> 00 ef 
+f3:eb82[  2] -> 00 ef 
+f3:eb84[  2] -> 00 ef 
+f3:eb86[  2] -> 00 ef 
+f3:eb88[  2] -> 00 ef 
+f3:eb8a[  2] -> 00 ef 
+f3:eb8c[  2] -> 00 ef 
+f3:eb8e[  2] -> 00 ef 
+f3:eb90[  2] -> 00 ef 
+f3:eb92[  2] -> 00 ef 
+f3:eb94[  2] -> 00 ef 
+f3:eb96[  2] -> 00 ef 
+f3:eb98[  2] -> 00 ef 
+f3:eb9a[  2] -> 00 ef 
+f3:eb9c[  2] -> 00 ef 
+f3:eb9e[  2] -> 00 ef 
+f3:eba0[  2] -> 00 ef 
+f3:eba2[  2] -> 00 ef 
+f3:eba4[  2] -> 00 ef 
+f3:eba6[  2] -> 00 ef 
+f3:eba8[  2] -> 00 ef 
+f3:ebaa[  2] -> 00 ef 
+f3:ebac[  2] -> 00 ef 
+f3:ebae[  2] -> 00 ef 
+f3:ebb0[  2] -> 00 ef 
+f3:ebb2[  2] -> 00 ef 
+f3:ebb4[  2] -> 00 ef 
+f3:ebb6[  2] -> 00 ef 
+f3:ebb8[  2] -> 00 ef 
+f3:ebba[  2] -> 00 ef 
+f3:ebbc[  2] -> 00 ef 
+f3:ebbe[  2] -> 00 ef 
+f3:ebc0[  2] -> 00 ef 
+f3:ebc2[  2] -> 00 ef 
+f3:ebc4[  2] -> 00 ef 
+f3:ebc6[  2] -> 00 ef 
+f3:ebc8[  2] -> 00 ef 
+f3:ebca[  2] -> 00 ef 
+f3:ebcc[  2] -> 00 ef 
+f3:ebce[  2] -> 00 ef 
+f3:ebd0[  2] -> 00 ef 
+f3:ebd2[  2] -> 00 ef 
+f3:ebd4[  2] -> 00 ef 
+f3:ebd6[  2] -> 00 ef 
+f3:ebd8[  2] -> 00 ef 
+f3:ebda[  2] -> 00 ef 
+f3:ebdc[  2] -> 00 ef 
+f3:ebde[  2] -> 00 ef 
+f3:ebe0[  2] -> 00 ef 
+f3:ebe2[  2] -> 00 ef 
+f3:ebe4[  2] -> 00 ef 
+f3:ebe6[  2] -> 00 ef 
+f3:ebe8[  2] -> 00 ef 
+f3:ebea[  2] -> 00 ef 
+f3:ebec[  2] -> 00 ef 
+f3:ebee[  2] -> 00 ef 
+f3:ebf0[  2] -> 00 ef 
+f3:ebf2[  2] -> 00 ef 
+f3:ebf4[  2] -> 00 ef 
+f3:ebf6[  2] -> 00 ef 
+f3:ebf8[  2] -> 00 ef 
+f3:ebfa[  2] -> 00 ef 
+f3:ebfc[  2] -> 00 ef 
+f3:ebfe[  2] -> 00 ef 
+f3:ec00[  2] -> 00 ef 
+f3:ec02[  2] -> 00 ef 
+f3:ec04[  2] -> 00 ef 
+f3:ec06[  2] -> 00 ef 
+f3:ec08[  2] -> 00 ef 
+f3:ec0a[  2] -> 00 ef 
+f3:ec0c[  2] -> 00 ef 
+f3:ec0e[  2] -> 00 ef 
+f3:ec10[  2] -> 00 ef 
+f3:ec12[  2] -> 00 ef 
+f3:ec14[  2] -> 00 ef 
+f3:ec16[  2] -> 00 ef 
+f3:ec18[  2] -> 00 ef 
+f3:ec1a[  2] -> 00 ef 
+f3:ec1c[  2] -> 00 ef 
+f3:ec1e[  2] -> 00 ef 
+f3:ec20[  2] -> 00 ef 
+f3:ec22[  2] -> 00 ef 
+f3:ec24[  2] -> 00 ef 
+f3:ec26[  2] -> 00 ef 
+f3:ec28[  7] -> 00 ef 00 00 00 27 06 
+f3:ec2f[  1] -> ef 
+f3:ec30[  2] -> 00 ef 
+f3:ec32[  2] -> 00 ef 
+f3:ec34[  2] -> 00 ef 
+f3:ec36[  2] -> 00 ef 
+f3:ec38[  2] -> 00 ef 
+f3:ec3a[  2] -> 00 ef 
+f3:ec3c[  7] -> 00 ef 00 00 00 27 06 
+f3:ec43[  1] -> ef 
+f3:ec44[  2] -> 00 ef 
+f3:ec46[  2] -> 00 ef 
+f3:ec48[  2] -> 00 ef 
+f3:ec4a[  2] -> 00 ef 
+f3:ec4c[  2] -> 00 ef 
+f3:ec4e[  2] -> 00 ef 
+f3:ec50[  2] -> 00 ef 
+f3:ec52[  2] -> 00 ef 
+f3:ec54[  2] -> 00 ef 
+f3:ec56[  2] -> 00 ef 
+f3:ec58[  2] -> 00 ef 
+f3:ec5a[ 22] -> 00 ef 21 00 00 d4 fe ef 11 00 01 c4 fe b7 ed 52 
+                ed 62 cc 00 00 00 00 00 00 ef c4 fe 23 d4 fe c3 
+                61 1c 
+f3:ec70[  3] -> c3 7c 1c 
+f3:ec7c[  4] -> ef c3 73 1c 
+f3:ec6d[  3] -> ca 80 1c 
+f3:ec80[  1] -> ef 
+f3:ec81[  8] -> 00 ef 00 00 00 00 27 06 
+f3:ec89[  7] -> ef 00 00 00 00 27 06 
+f3:ec90[  7] -> ef 00 00 00 00 27 06 
+f3:ec97[  7] -> ef 00 00 00 00 27 06 
+f3:ec9e[  7] -> ef 00 00 00 00 27 06 
+f3:eca5[  7] -> ef 00 00 00 00 27 06 
+f3:ecac[  7] -> ef 00 00 00 00 27 02 
+f3:ecb3[  b] -> ef 00 00 00 e5 00 00 00 00 27 02 
+f3:eb12[  3] -> ca be 1c 
+f3:ecbe[  7] -> ef 00 00 00 00 27 06 
+f3:ecc5[  7] -> ef 00 00 00 00 27 08 
+f3:eccc[  7] -> ef 00 00 00 00 27 08 
+f3:ecd3[  7] -> ef 00 00 00 00 27 08 
+f3:ecda[  7] -> ef 00 00 00 00 27 08 
+*1AB6scod_base
+*0000roms
+*0000version=dcw
+*0000library=dcw

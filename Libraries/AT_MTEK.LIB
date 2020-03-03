@@ -1,0 +1,195 @@
+/*** BeginHeader cof_read_mtek */
+#define MTK_MAXPAYLOAD 60
+#define GPS_RX_STR_LEN 1024         //serial string length
+scofunc void cof_read_mtek();
+/*** EndHeader */
+
+/* START FUNCTION DESCRIPTION ********************************************
+cof_read_ublox
+
+DESCRIPTION: Cofunction that reads the ublox gps
+
+RETURN VALUE: None.
+
+END DESCRIPTION **********************************************************/
+nodebug
+scofunc void cof_read_mtek()
+{
+   int i;
+   int str_length;
+   int MTK_step;
+   int gps_fix_flag;
+   char data;
+
+   char gps_sent[GPS_RX_STR_LEN];
+   //char UBX_buffer[UBX_MAXPAYLOAD];
+   //char UBX_class,UBX_id;
+   char MTK_ck_a,MTK_ck_b;
+   char MTK_payload_length;
+   int  MTK_payload_counter;
+
+   MTK_step = 0;
+
+   wfd str_length = cof_serDread(gps_sent,GPS_RX_STR_LEN,200);
+   serDrdFlush();
+
+   for (i = 0; i < str_length; i++)  // Process bytes received
+   {
+      data = gps_sent[i];
+   switch (MTK_step)
+   	{
+          case 0:
+          	{
+               if(data == 0xD0) // MTK sync char 1
+            		{
+                  	MTK_step++;      // OH first data packet is correct, so jump to the next step
+                  }
+
+
+               if(data == 0x24) //if $ then not in the correct mode
+               	{
+                     MTK_step = 6;
+                  }
+
+               break;
+            }
+          case 1:
+          	{
+               if(data == 0xDD)        // MTK sync char 2
+               	{
+	                  MTK_step++;      // ooh! The second data packet is correct, jump to the step 2
+	                  break;
+	               }
+              	MTK_step = 0;    // Nop, is not correct so restart to step zero and try again.
+               break;
+            }
+          case 2:
+          	{
+               MTK_payload_length = data;
+
+               ubx_checksum(MTK_payload_length);
+               MTK_step++;
+               MTK_payload_counter = 0;
+               if (MTK_payload_length >= MTK_MAXPAYLOAD)
+                  {
+               		MTK_step = 0;    // Bad data, so restart to step zero and try again.
+                     chk_a = 0;
+                     chk_b = 0;
+               	}
+                break;
+            }
+          case 3:
+          	{
+              if (MTK_payload_counter < MTK_payload_length)        // We stay in this state until we reach the payload_length
+              	{
+               	MTK_buffer[MTK_payload_counter] = data;
+                  ubx_checksum(data);
+                  MTK_payload_counter++;
+                  if (MTK_payload_counter == MTK_payload_length)
+                     {
+                     	MTK_step++;
+                     }
+               }
+               break;
+            }
+          case 4:
+          	{
+               MTK_ck_a = data;         // First checksum byte
+            	MTK_step++;
+               break;
+            }
+           case 5:
+          	{
+               MTK_ck_b = data;  // Second checksum byte
+               // We end the GPS read...
+
+                if((chk_a == MTK_ck_a) && (chk_b == MTK_ck_b)) // Verify the received checksum with the generated checksum..
+                	{
+                     //printf("\r\n check_sum passed");
+                     parse_mtk_gps();// Parse the new GPS packet
+                     gps_fix_flag = 1;
+                  }
+                else
+                	{
+                  	printf("\r\n GPS Checksum Fail");
+                     gps_fix_flag =0;
+                	}
+        				// Variable initialization
+                MTK_step = 0;
+                chk_a = 0;
+                chk_b = 0;
+                //GPS_timer = millis(); // Restarting timer...
+                break;
+            }
+           case 6:
+           	{
+
+               if(data == 0x47) // ascii G
+            		{
+                  	init_mtk_gps();
+                  }
+               MTK_step = 0;
+
+               break;
+            }
+      }//end switch
+   }//end for
+}//cof_read_ublox
+
+/*** BeginHeader parse_mtk_gps */
+void parse_mtk_gps(void);
+/*** EndHeader */
+void parse_mtk_gps(void)
+{
+  auto char* MTK_buffer_add;
+  auto float temp_new_sog;
+  auto unsigned int temp_uint_hdop;
+
+  MTK_buffer_add = &MTK_buffer[0];
+
+  m_floats[MF_GPS_LAT] = join_4_bytes(MTK_buffer_add,0)*1e-6; // lat * 10000000
+  m_floats[MF_GPS_LON] = join_4_bytes(MTK_buffer_add,4)*1e-6; // lat * 10000000
+  m_floats[MF_GPS_ALTITUDE] = join_4_bytes(MTK_buffer_add,8)*1e-2; // MSL heigth m
+  m_floats[MF_GPS_SPEED] = join_4_bytes(MTK_buffer_add,12)*1e-2; // m/s
+
+  m_floats[MF_GPS_HEADING] = join_4_bytes(MTK_buffer_add,16)*1e-2; // Heading 2D deg
+  	if (m_floats[MF_GPS_HEADING] > 180.0)
+      {
+	   	m_floats[MF_GPS_HEADING] = m_floats[MF_GPS_HEADING] - 360.0;
+	   }
+   if (m_floats[MF_GPS_HEADING] < -180.0)
+      {
+	   	m_floats[MF_GPS_HEADING] = m_floats[MF_GPS_HEADING] + 360.0;
+	   }
+   m_floats[MF_GPS_HEADING] *= DEG2RAD;
+   m_bytes[MB_GPS_NUM_SATELLITES] = MTK_buffer[20];
+   m_bytes[MB_GPS_FIX_QUALITY] = MTK_buffer[21];
+
+   memcpy(&temp_uint_hdop,&MTK_buffer[30],2);
+   m_floats[MF_GPS_HDOP] = ((float)temp_uint_hdop)/100;
+
+
+}//end parse_mtk_gps
+
+/*** BeginHeader init_mtk_gps */
+void init_mtk_gps(void);
+/*** EndHeader */
+void init_mtk_gps(void)
+{
+   const static char init_mtk_binary_gps[] = "$PGCMD,16,0,0,0,0,0*6A\r\n";
+   const static char init_mtk_ouput_4hz[] = "$PMTK220,250*29\r\n";
+   const static char init_mtk_sbas_on[] = "$PMTK313,1*2E\r\n";
+   const static char init_mtk_sbas_off[] = "$PMTK313,0*2F\r\n";
+   const static char init_mtk_waas_on[] = "$PSRF151,1*3F\r\n";
+   const static char init_mtk_waas_off[] = "$PSRF151,0*3E\r\n";
+
+
+   serDputs(init_mtk_binary_gps);
+   serDputs(init_mtk_ouput_4hz);
+   //serDputs(init_mtk_sbas_on);
+   serDputs(init_mtk_waas_on);
+   serDputs(init_mtk_sbas_off);
+   //serDputs(init_mtk_waas_off);
+
+   printf("\r\nMediaTek GPS initialized");
+}// end init_mtk_gps

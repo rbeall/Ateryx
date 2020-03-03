@@ -1,0 +1,62 @@
+/*** BeginHeader mavlink_msg_param_value_send */
+#define MAVLINK_MSG_PARAM_VALUE 22
+void mavlink_msg_param_value_send(char* param_id, float float_value, int param_count, int param_index);
+/*** EndHeader */
+void mavlink_msg_param_value_send(char* param_id, float float_value, int param_count, int param_index)
+{
+  	auto char pkt[23 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   char float_tmp[4];
+
+   paledon(Tx_led);
+   payload_length = 23;
+
+   pkt[0] = MAVLINK_STX; //Mavlink Header
+   pkt[1] = payload_length; //Payload length
+   pkt[2] = packet_sequence; //Packet sequence
+   pkt[3] = mavlink_system.sysid; //System ID
+   pkt[4] = mavlink_system.compid; //Component ID
+   pkt[5] = MAVLINK_MSG_PARAM_VALUE; //Message ID
+
+   pkt[6] = param_id[0];
+   pkt[7] = param_id[1];
+   pkt[8] = param_id[2];
+   pkt[9] = param_id[3];
+   pkt[10] = param_id[4];
+   pkt[11] = param_id[5];
+   pkt[12] = param_id[6];
+   pkt[13] = param_id[7];
+   pkt[14] = param_id[8];
+   pkt[15] = param_id[9];
+   pkt[16] = param_id[10];
+   pkt[17] = param_id[11];
+   pkt[18] = param_id[12];
+   pkt[19] = param_id[13];
+   pkt[20] = param_id[14];
+
+   memcpy(float_tmp, &float_value, sizeof(float_value));
+   pkt[21] = float_tmp[3];
+   pkt[22] = float_tmp[2];
+   pkt[23] = float_tmp[1];
+   pkt[24] = float_tmp[0];
+
+   pkt[25] = (uint8_t)(param_count >> 8);
+   pkt[26] = (uint8_t)(param_count & 0xFF);
+
+   pkt[27] = (uint8_t)(param_index >> 8);
+   pkt[28] = (uint8_t)(param_index & 0xFF);
+
+   checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+   pkt[29] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+   pkt[30] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+    for(i = 0; i < (payload_length + 8); i++)
+	{
+		serFputc(pkt[i]);
+	}
+   packet_sequence++;
+   paledoff(Tx_led);
+}//end mavlink_msg_param_value_send

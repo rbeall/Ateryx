@@ -1,0 +1,66 @@
+/*** BeginHeader mavlink_send_scaled_imu*/
+#define MAVLINK_MSG_ID_SCALED_IMU 26
+void mavlink_send_scaled_imu(void);
+/*** EndHeader */
+void mavlink_send_scaled_imu(void)
+{
+	auto char pkt[26 + MAVLINK_NUM_NON_PAYLOAD_BYTES];
+   auto unsigned int checksum;
+   auto int i;
+   auto char payload_length;
+   char float_tmp[4];
+   float float_scale_temp;
+
+   //paledon(Tx_led);
+   payload_length = 26;
+
+   pkt[0] = MAVLINK_STX; //Mavlink Header
+   pkt[1] = payload_length; //Payload length
+   pkt[2] = packet_sequence; //Packet sequence
+   pkt[3] = mavlink_system.sysid; //System ID
+   pkt[4] = mavlink_system.compid; //Component ID
+   pkt[5] = MAVLINK_MSG_ID_SCALED_IMU; //Message ID
+
+   pkt[6] = 0x00; //Timestamp
+   pkt[7] = 0x00;
+   pkt[8] = 0x00;
+   pkt[9] = 0x00;
+   pkt[10] = 0x00;
+   pkt[11] = 0x00;
+   pkt[12] = 0x00;
+   pkt[13] = 0x00;
+
+   pkt[14] = (uint8_t)((unsigned int)(m_floats[MF_AX]*1000)>> 8); //x accel milli g
+   pkt[15] = (uint8_t)((unsigned int)(m_floats[MF_AX]*1000)& 0xFF);
+   pkt[16] = (uint8_t)((unsigned int)(m_floats[MF_AY]*1000)>> 8); //y accel milli g
+   pkt[17] = (uint8_t)((unsigned int)(m_floats[MF_AY]*1000)& 0xFF);
+   pkt[18] = (uint8_t)((unsigned int)(m_floats[MF_AZ]*1000)>> 8); //z accel milli g
+   pkt[19] = (uint8_t)((unsigned int)(m_floats[MF_AZ]*1000)& 0xFF);
+   pkt[20] = (uint8_t)((unsigned int)(m_floats[MF_GYRO_P]*1000)>> 8); //p milli rad
+   pkt[21] = (uint8_t)((unsigned int)(m_floats[MF_GYRO_P]*1000)& 0xFF);
+   pkt[22] = (uint8_t)((unsigned int)(m_floats[MF_GYRO_Q]*1000)>> 8); //q milli rad
+   pkt[23] = (uint8_t)((unsigned int)(m_floats[MF_GYRO_Q]*1000)& 0xFF);
+   pkt[24] = (uint8_t)((unsigned int)(m_floats[MF_GYRO_R]*1000)>> 8); //r milli rad
+   pkt[25] = (uint8_t)((unsigned int)(m_floats[MF_GYRO_R]*1000)& 0xFF);
+   pkt[26] = (uint8_t)((unsigned int)(m_floats[MF_MAG_X])>> 8); //x milli tessla
+   pkt[27] = (uint8_t)((unsigned int)(m_floats[MF_MAG_X])& 0xFF);
+   pkt[28] = (uint8_t)((unsigned int)(m_floats[MF_MAG_Y])>> 8); //y milli tessla
+   pkt[29] = (uint8_t)((unsigned int)(m_floats[MF_MAG_Y])& 0xFF);
+   pkt[30] = 0x00;//(uint8_t)((unsigned int)(m_floats[MF_MAG_Z]*1000)>> 8); //z milli tessla
+   pkt[31] = 0x00;//(uint8_t)((unsigned int)(m_floats[MF_MAG_Z]*1000)& 0xFF);
+
+   checksum = crc_calculate((uint8_t*)((void*)pkt), payload_length + MAVLINK_CORE_HEADER_LEN);
+   pkt[32] = (uint8_t)(checksum & 0xFF);//0x36; 	//chk_a
+   pkt[33] = (uint8_t)(checksum >> 8);//0x83;  //chk_b
+
+
+    for(i = 0; i < (payload_length + 8); i++)
+	{
+		serFputc(pkt[i]);
+	}
+   packet_sequence++;
+   //paledoff(Tx_led);
+}//end mavlink_send_scaled_imu
+
+
+

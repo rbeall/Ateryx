@@ -1,0 +1,378 @@
+/*** BeginHeader readFlash ***/
+#define USER_BLOCK_INIT_CODE	24 // advance with each code version
+//#define WRITE_TEMPCOMP 1
+
+#define FL_INDEX_GUID			0
+
+#define FL_INDEX_TC_START	10
+
+#define FL_INDEX_PID_START 150  //->374
+#define FL_PID_SIZE  28
+
+#define FL_INDEX_UL_START 520
+#define FL_UL_SIZE  4
+
+#define FL_INDEX_STACK_START  2000
+#define FL_STACK_SIZE    58
+
+#define FL_INDEX_CMD_TOTAL_START    2094
+#define FL_CMD_TOTAL_SIZE     2
+
+#define FL_INDEX_CMD_START   	2100
+#define FL_CMD_SIZE    35
+
+
+
+void readFlash(char set_defaults);
+/*** EndHeader ***/
+void readFlash(char set_defaults)
+{
+   unsigned int i;
+   char user_block_init; //corrupted flash check
+   PID_loop_flash flash_PIDS[8];
+   unsigned int temp_flash_index;
+
+   readUserBlock(&user_block_init,FL_INDEX_GUID,sizeof(user_block_init));
+	if ((user_block_init != USER_BLOCK_INIT_CODE) || set_defaults) //load defaults if erased flash
+   	{
+        paledon(Rx_led);
+        user_block_init = USER_BLOCK_INIT_CODE;
+        writeUserBlock(FL_INDEX_GUID,&user_block_init,sizeof(user_block_init));
+
+        	//put all defaults here
+
+ //Temp comp coeff
+
+#ifdef WRITE_TEMPCOMP
+g_tc.ax[AX_SCALE1] = 7.220723375956410e-005;
+g_tc.ax[AX_SCALE0] = 1.961075707697675e-001;
+g_tc.ay[AY_SCALE1] = 2.372979609285659e-005;
+g_tc.ay[AY_SCALE0] = -1.970065047980741e-001;
+g_tc.az[AZ_SCALE1] = 7.443122930603735e-005;
+g_tc.az[AZ_SCALE0] = -2.076450644366921e-001;
+
+g_tc.ax[AX_SHIFT1] = -6.737626087243613e-004;
+g_tc.ax[AX_SHIFT0] = 1.698725358663184e+000;
+g_tc.ay[AY_SHIFT1] = -2.741579039427019e-003;
+g_tc.ay[AY_SHIFT0] = 1.698647876253919e+000;
+g_tc.az[AZ_SHIFT1] = -2.723096341618312e-003;
+g_tc.az[AZ_SHIFT0] = 1.692508736761274e+000;
+
+g_tc.p[2] = 4.896926702402571e-008;
+g_tc.p[1] = -4.529176613978983e-007;
+g_tc.p[0] = 2.497846971538444e+000;
+g_tc.q[2] = 1.176473701625656e-006;
+g_tc.q[1] = -5.346567205406273e-004;
+g_tc.q[0] = 2.491302235930547e+000;
+g_tc.r[2] = 1.460271828083680e-006;
+g_tc.r[1] = -2.689881874874701e-005;
+g_tc.r[0] = 2.5384923221919700e+00;
+g_tc.ap[2] = -8.628606089141236e-006;
+g_tc.ap[1] = 5.857646773021233e-004;
+g_tc.ap[0] = 8.815744263136148e-001;
+g_tc.dp[2] = 7.596372559412476e-006;
+g_tc.dp[1] = 2.460034956862800e-004;
+g_tc.dp[0] = 3.604070080129961e-001;
+
+#endif
+
+         //Default PID values
+         flash_PIDS[PID_pitch].kp = 1.0;
+         flash_PIDS[PID_pitch].kd = 0.0;
+         flash_PIDS[PID_pitch].ki = 0.1;
+         flash_PIDS[PID_pitch].effort_limit = 45.0*DEG2RAD;
+         flash_PIDS[PID_pitch].integral_limit = 8.0*DEG2RAD;
+         flash_PIDS[PID_pitch].boot_desired = 0.0;
+         flash_PIDS[PID_pitch].loop_id = PID_pitch;
+
+         flash_PIDS[PID_pitch_rate].kp = 0.0;
+         flash_PIDS[PID_pitch_rate].kd = 0.0;
+         flash_PIDS[PID_pitch_rate].ki = 0.0;
+         flash_PIDS[PID_pitch_rate].effort_limit = 45.0*DEG2RAD;
+         flash_PIDS[PID_pitch_rate].integral_limit = 8.0*DEG2RAD;
+         flash_PIDS[PID_pitch_rate].boot_desired = 0.0;
+         flash_PIDS[PID_pitch_rate].loop_id = PID_pitch_rate;
+
+         flash_PIDS[PID_roll].kp = 1.0;
+         flash_PIDS[PID_roll].kd = 0.0;
+         flash_PIDS[PID_roll].ki = 0.0;
+         flash_PIDS[PID_roll].effort_limit = 45.0*DEG2RAD;
+         flash_PIDS[PID_roll].integral_limit = 8.0*DEG2RAD;
+         flash_PIDS[PID_roll].boot_desired = 0.0;
+         flash_PIDS[PID_roll].loop_id = PID_roll;
+
+         flash_PIDS[PID_roll_rate].kp = 0.0;
+         flash_PIDS[PID_roll_rate].kd = 0.0;
+         flash_PIDS[PID_roll_rate].ki = 0.0;
+         flash_PIDS[PID_roll_rate].effort_limit = 45.0*DEG2RAD;
+         flash_PIDS[PID_roll_rate].integral_limit = 8.0*DEG2RAD;
+         flash_PIDS[PID_roll_rate].boot_desired = 0.0;
+         flash_PIDS[PID_roll_rate].loop_id = PID_roll_rate;
+
+         flash_PIDS[PID_yaw_rate].kp = 0.0;
+         flash_PIDS[PID_yaw_rate].kd = 0.0;
+         flash_PIDS[PID_yaw_rate].ki = 0.0;
+         flash_PIDS[PID_yaw_rate].effort_limit = 45.0*DEG2RAD;
+         flash_PIDS[PID_yaw_rate].integral_limit = 8.0*DEG2RAD;
+         flash_PIDS[PID_yaw_rate].boot_desired = 0.0;
+         flash_PIDS[PID_yaw_rate].loop_id = PID_yaw_rate;
+
+         flash_PIDS[PID_heading].kp = 1.0;
+         flash_PIDS[PID_heading].kd = 0.1;
+         flash_PIDS[PID_heading].ki = 0.0;
+         flash_PIDS[PID_heading].effort_limit = 45*DEG2RAD;
+         flash_PIDS[PID_heading].integral_limit = 8.0*DEG2RAD;
+         flash_PIDS[PID_heading].boot_desired = 0.0;
+         flash_PIDS[PID_heading].loop_id = PID_heading;
+
+         flash_PIDS[PID_airspeed].kp = 0.025;
+         flash_PIDS[PID_airspeed].kd = 0.0;
+         flash_PIDS[PID_airspeed].ki = 0.01;
+         flash_PIDS[PID_airspeed].effort_limit = 50.0*DEG2RAD;
+         flash_PIDS[PID_airspeed].integral_limit = 8.0*DEG2RAD;
+         flash_PIDS[PID_airspeed].boot_desired = 0.0;
+         flash_PIDS[PID_airspeed].loop_id = PID_airspeed;
+
+         flash_PIDS[PID_energy_height].kp = 8.5;
+         flash_PIDS[PID_energy_height].kd = 0.0;
+         flash_PIDS[PID_energy_height].ki = 0.1;
+         flash_PIDS[PID_energy_height].effort_limit = 95.0;
+         flash_PIDS[PID_energy_height].integral_limit = 10.0;
+         flash_PIDS[PID_energy_height].boot_desired = 0.0;
+         flash_PIDS[PID_energy_height].loop_id = PID_energy_height;
+
+         //UAV Limits
+         ram_UAV_limits[UL_EH_RANGE] = 7.62;
+         ram_UAV_limits[UL_PHI_LOWER_LIMIT] = -45.0*DEG2RAD;
+         ram_UAV_limits[UL_PHI_UPPER_LIMIT] = 45.0*DEG2RAD;
+         ram_UAV_limits[UL_THETA_LOWER_LIMIT] = -45.0*DEG2RAD;
+         ram_UAV_limits[UL_THETA_UPPER_LIMIT] = 45.0*DEG2RAD;
+         ram_UAV_limits[UL_IAS_LOWER_LIMIT] = 6.0;
+         ram_UAV_limits[UL_IAS_UPPER_LIMIT] = 18.0;
+         ram_UAV_limits[UL_ALT_LOWER_LIMIT] = 25.0;
+         ram_UAV_limits[UL_ALT_UPPER_LIMIT] = 300.0;
+         ram_UAV_limits[UL_PID_DERIVE_CORNER_FREQ] = 150.0;
+
+         ram_UAV_limits[UL_AILERON_SCALAR] = 1100.0;
+         ram_UAV_limits[UL_ELEVATOR_SCALAR] = 1000.0;
+         ram_UAV_limits[UL_THROTTLE_SCALAR] = 10.0;
+         ram_UAV_limits[UL_RUDDER_SCALAR] = 600.0;
+         ram_UAV_limits[UL_AILE_SERVO_BIAS] = 1500.0;
+         ram_UAV_limits[UL_ELEV_SERVO_BIAS] = 1500.0;
+         ram_UAV_limits[UL_THRO_SERVO_BIAS] = 1000.0;
+         ram_UAV_limits[UL_RUDD_SERVO_BIAS] = 1500.0;
+         ram_UAV_limits[UL_TRIM_THROTTLE] = 35.0;
+         ram_UAV_limits[UL_CRUISE_ARSPD] = 14.0;
+         ram_UAV_limits[UL_ROLL_TO_ELEV] = 600.0;
+         ram_UAV_limits[UL_PSIDOT_CTRL] = 0.0;
+
+         ram_UAV_limits[UL_T_OFF_PITCH] = 18.0*DEG2RAD;
+         ram_UAV_limits[UL_LND_APCH_SPD] = 10.0;
+
+         ram_UAV_limits[UL_SERVO_MIXING] = 0.0;
+         ram_UAV_limits[UL_DEFAULT_LOITER_RAD] = 30.0;
+         ram_UAV_limits[UL_ORBIT_GAIN] = 1.5;
+         ram_UAV_limits[UL_WYPT_RAD] = 40.0;
+         ram_UAV_limits[UL_XTRACK_GAIN] = 0.031;
+         ram_UAV_limits[UL_ENTRY_ANGLE] = 70*DEG2RAD;
+
+         ram_UAV_limits[UL_FIELD_ELEVATION] = 0.0;
+         ram_UAV_limits[UL_FIELD_ATM_PRESS] = 29.92;
+         ram_UAV_limits[UL_ABS_PRESS_INT] = 16.724893;
+         ram_UAV_limits[UL_PRESS_TO_ALT_INT] = 44192.0;
+
+         ram_UAV_limits[UL_MAG_INCLINATION] = 50.0*DEG2RAD;
+         ram_UAV_limits[UL_MAG_DECLINATION] = 0.0*DEG2RAD;
+         ram_UAV_limits[UL_MAG_TOTAL] = 1.0;
+         ram_UAV_limits[UL_MAG_XSF] = 1.0;
+         ram_UAV_limits[UL_MAG_XOFF] = -3.4865 ;
+         ram_UAV_limits[UL_MAG_YSF] = 1.0;
+         ram_UAV_limits[UL_MAG_YOFF] = -2.5186;
+
+         m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+   		m_ints[MI_FLC] |= FLC_AILE_ROLL;
+   		m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+   		m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+
+        //Command Stack
+        memset(&g_cmd_stack, 0, sizeof(g_cmd_stack));
+        g_cmd_stack.current_cmd = &g_cmds[1];
+    	  g_cmd_stack.previous_cmd = &g_cmds[0];
+        g_cmd_stack.desired_altitude = 150.0;
+        g_cmd_stack.desired_airspeed = ram_UAV_limits[UL_CRUISE_ARSPD];
+	     g_cmd_stack.desired_lat = HOME_LAT;
+        g_cmd_stack.desired_lon = HOME_LON;
+        g_cmd_stack.previous_cmd_number = 0;
+
+
+        //Commands
+        memset(&g_cmds,      0, sizeof(g_cmds));
+
+        g_cmds[0].param1 = 0.0;
+        g_cmds[0].param2 = 0.0;
+        g_cmds[0].param3 = 0.0;
+        g_cmds[0].param4 = 0.0;
+        g_cmds[0].x = HOME_LAT;    	// (meters)  north from home position	(latitude)
+        g_cmds[0].y = HOME_LON;    	// (meters)  East from home position	(longitude)
+    	  g_cmds[0].z = 200;				// (meters)  above home position
+        g_cmds[0].seq = 0;
+        g_cmds[0].command = MAV_CMD_NAV_RETURN_TO_LAUNCH;
+        g_cmds[0].frame = MAV_FRAME_GLOBAL;
+        g_cmds[0].current = 1;
+        g_cmds[0].autocontinue = 0;
+
+        for(i=0; i<256; i++)
+        	g_cmds[i].seq = i;
+
+        g_number_of_commands = 1;
+
+#ifdef WRITE_TEMPCOMP
+        //Temp comp coeff
+	     writeUserBlock(FL_INDEX_TC_START,&g_tc,sizeof(g_tc));
+#endif
+        //PID values for all loops
+        writeUserBlock(FL_INDEX_PID_START,&flash_PIDS,sizeof(flash_PIDS));
+        /*
+        writeUserBlock(FL_INDEX_PID_START +(PID_pitch*FL_PID_SIZE),&flash_PIDS[PID_pitch],FL_PID_SIZE);
+        writeUserBlock(FL_INDEX_PID_START +(PID_pitch_rate*FL_PID_SIZE),&flash_PIDS[PID_pitch_rate],FL_PID_SIZE);
+        writeUserBlock(FL_INDEX_PID_START +(PID_roll*FL_PID_SIZE),&flash_PIDS[PID_roll],FL_PID_SIZE);
+        writeUserBlock(FL_INDEX_PID_START +(PID_roll_rate*FL_PID_SIZE),&flash_PIDS[PID_roll_rate],FL_PID_SIZE);
+        writeUserBlock(FL_INDEX_PID_START +(PID_yaw_rate*FL_PID_SIZE),&flash_PIDS[PID_yaw_rate],FL_PID_SIZE);
+        writeUserBlock(FL_INDEX_PID_START +(PID_heading*FL_PID_SIZE),&flash_PIDS[PID_heading],FL_PID_SIZE);
+        writeUserBlock(FL_INDEX_PID_START +(PID_airspeed*FL_PID_SIZE),&flash_PIDS[PID_airspeed],FL_PID_SIZE);
+        writeUserBlock(FL_INDEX_PID_START +(PID_energy_height*FL_PID_SIZE),&flash_PIDS[PID_energy_height],FL_PID_SIZE);
+        */
+        //UAV Limits
+        writeUserBlock(FL_INDEX_UL_START,&ram_UAV_limits,sizeof(ram_UAV_limits));
+        //Command Stack
+        writeUserBlock(FL_INDEX_STACK_START,&g_cmd_stack,sizeof(g_cmd_stack));
+        //Commands
+        writeUserBlock(FL_INDEX_CMD_START,&g_cmds,sizeof(g_cmds));
+        //Total Commands
+        writeUserBlock(FL_INDEX_CMD_TOTAL_START,&g_number_of_commands,sizeof(g_number_of_commands));
+
+        paledoff(Rx_led);
+        printf("\rFlash set to Defaults");
+      }
+    //load values from Flash
+
+    //Temp comp coeff
+    readUserBlock(&g_tc,FL_INDEX_TC_START,sizeof(g_tc));
+
+    //PID's read and init
+    PID_init(&g_PIDS[PID_pitch],&m_floats[MF_THETA],&g_servos[SERVO_OUT].elevator,INNER_LOOP_CORNER_FREQ);
+    PID_init(&g_PIDS[PID_pitch_rate],&m_floats[GYRO_Q],&g_servos[SERVO_OUT].elevator,INNER_LOOP_CORNER_FREQ);
+
+    PID_init(&g_PIDS[PID_roll],&m_floats[MF_PHI],&g_servos[SERVO_OUT].aileron,INNER_LOOP_CORNER_FREQ);
+    PID_init(&g_PIDS[PID_roll_rate],&m_floats[GYRO_P],&g_servos[SERVO_OUT].aileron,INNER_LOOP_CORNER_FREQ);
+#ifdef USE_HIL
+    PID_init(&g_PIDS[PID_heading],&m_floats[MF_TRUE_PSI],&g_cmd_stack.desired_roll,INNER_LOOP_CORNER_FREQ);
+#else
+    PID_init(&g_PIDS[PID_heading],&m_floats[MF_PSI_GPS],&g_cmd_stack.desired_roll,INNER_LOOP_CORNER_FREQ);
+#endif
+
+    PID_init(&g_PIDS[PID_yaw_rate],&m_floats[GYRO_R],&g_servos[SERVO_OUT].rudder,INNER_LOOP_CORNER_FREQ);
+    //used for heading lock on takeoff
+    //PID_init(&g_PIDS[PID_heading2],&m_floats[MF_HEADING_RATE],&g_cmd_stack.desired_heading,INNER_LOOP_CORNER_FREQ);
+
+    PID_init(&g_PIDS[PID_airspeed],&m_floats[MF_INDICATED_AIRSPEED],&g_cmd_stack.desired_pitch,INNER_LOOP_CORNER_FREQ);
+    PID_init(&g_PIDS[PID_energy_height],&m_floats[MF_ENERGY_HEIGHT],&g_servos[SERVO_OUT].throttle,INNER_LOOP_CORNER_FREQ);
+
+    //UAV Limits
+    readUserBlock(&ram_UAV_limits,FL_INDEX_UL_START,sizeof(ram_UAV_limits));
+    //Command Stack
+    readUserBlock(&g_cmd_stack,FL_INDEX_STACK_START,sizeof(g_cmd_stack));
+    //Commands
+    readUserBlock(&g_cmds,FL_INDEX_CMD_START,sizeof(g_cmds));	//only copy the first cmd
+    //Total Commands
+    readUserBlock(&g_number_of_commands,FL_INDEX_CMD_TOTAL_START,sizeof(g_number_of_commands));
+
+    }//end readFlash()
+
+/*** BeginHeader writeFlash ***/
+void writeFlash(void);
+/*** EndHeader ***/
+void writeFlash(void)
+{
+   PID_loop_flash flash_PIDS[15];
+
+   //Save Tempcomp shifts from "zero_attitude()"
+   writeUserBlock(FL_INDEX_TC_START,&g_tc,sizeof(g_tc));
+
+  //PID values
+  	flash_PIDS[PID_pitch].kp = g_PIDS[PID_pitch].kp;
+  	flash_PIDS[PID_pitch].kd = g_PIDS[PID_pitch].kd;
+  	flash_PIDS[PID_pitch].ki = g_PIDS[PID_pitch].ki;
+  	flash_PIDS[PID_pitch].effort_limit = g_PIDS[PID_pitch].effort_limit;
+   flash_PIDS[PID_pitch].integral_limit = g_PIDS[PID_pitch].integral_limit;
+  	flash_PIDS[PID_pitch].boot_desired = 0.0;
+  	flash_PIDS[PID_pitch].loop_id = (float)PID_pitch;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_pitch*FL_PID_SIZE),&flash_PIDS[PID_pitch],FL_PID_SIZE);
+  	flash_PIDS[PID_pitch_rate].kp = g_PIDS[PID_pitch_rate].kp;
+  	flash_PIDS[PID_pitch_rate].kd = g_PIDS[PID_pitch_rate].kd;
+  	flash_PIDS[PID_pitch_rate].ki = g_PIDS[PID_pitch_rate].ki;
+  	flash_PIDS[PID_pitch_rate].effort_limit = g_PIDS[PID_pitch_rate].effort_limit;
+   flash_PIDS[PID_pitch_rate].integral_limit = g_PIDS[PID_pitch_rate].integral_limit;
+  	flash_PIDS[PID_pitch_rate].boot_desired = 0.0;
+  	flash_PIDS[PID_pitch_rate].loop_id = (float)PID_pitch_rate;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_pitch_rate*FL_PID_SIZE),&flash_PIDS[PID_pitch_rate],FL_PID_SIZE);
+  	flash_PIDS[PID_roll].kp = g_PIDS[PID_roll].kp;
+  	flash_PIDS[PID_roll].kd = g_PIDS[PID_roll].kd;
+  	flash_PIDS[PID_roll].ki = g_PIDS[PID_roll].ki;
+  	flash_PIDS[PID_roll].effort_limit = g_PIDS[PID_roll].effort_limit;
+   flash_PIDS[PID_roll].integral_limit = g_PIDS[PID_roll].integral_limit;
+  	flash_PIDS[PID_roll].boot_desired = 0.0;
+  	flash_PIDS[PID_roll].loop_id = (float)PID_roll;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_roll*FL_PID_SIZE),&flash_PIDS[PID_roll],FL_PID_SIZE);
+  	flash_PIDS[PID_roll_rate].kp = g_PIDS[PID_roll_rate].kp;
+  	flash_PIDS[PID_roll_rate].kd = g_PIDS[PID_roll_rate].kd;
+  	flash_PIDS[PID_roll_rate].ki = g_PIDS[PID_roll_rate].ki;
+  	flash_PIDS[PID_roll_rate].effort_limit = g_PIDS[PID_roll_rate].effort_limit;
+   flash_PIDS[PID_roll_rate].integral_limit = g_PIDS[PID_roll_rate].integral_limit;
+  	flash_PIDS[PID_roll_rate].boot_desired = 0.0;
+  	flash_PIDS[PID_roll_rate].loop_id = (float)PID_roll_rate;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_roll_rate*FL_PID_SIZE),&flash_PIDS[PID_roll_rate],FL_PID_SIZE);
+   flash_PIDS[PID_yaw_rate].kp = g_PIDS[PID_yaw_rate].kp;
+  	flash_PIDS[PID_yaw_rate].kd = g_PIDS[PID_yaw_rate].kd;
+  	flash_PIDS[PID_yaw_rate].ki = g_PIDS[PID_yaw_rate].ki;
+  	flash_PIDS[PID_yaw_rate].effort_limit = g_PIDS[PID_yaw_rate].effort_limit;
+   flash_PIDS[PID_yaw_rate].integral_limit = g_PIDS[PID_yaw_rate].integral_limit;
+  	flash_PIDS[PID_yaw_rate].boot_desired = 0.0;
+  	flash_PIDS[PID_yaw_rate].loop_id = (float)PID_yaw_rate;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_yaw_rate*FL_PID_SIZE),&flash_PIDS[PID_yaw_rate],FL_PID_SIZE);
+   flash_PIDS[PID_heading].kp = g_PIDS[PID_heading].kp;
+  	flash_PIDS[PID_heading].kd = g_PIDS[PID_heading].kd;
+  	flash_PIDS[PID_heading].ki = g_PIDS[PID_heading].ki;
+  	flash_PIDS[PID_heading].effort_limit = g_PIDS[PID_heading].effort_limit;
+   flash_PIDS[PID_heading].integral_limit = g_PIDS[PID_heading].integral_limit;
+  	flash_PIDS[PID_heading].boot_desired = 0.0;
+  	flash_PIDS[PID_heading].loop_id = (float)PID_heading;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_heading*FL_PID_SIZE),&flash_PIDS[PID_heading],FL_PID_SIZE);
+   flash_PIDS[PID_airspeed].kp = g_PIDS[PID_airspeed].kp;
+  	flash_PIDS[PID_airspeed].kd = g_PIDS[PID_airspeed].kd;
+  	flash_PIDS[PID_airspeed].ki = g_PIDS[PID_airspeed].ki;
+  	flash_PIDS[PID_airspeed].effort_limit = g_PIDS[PID_airspeed].effort_limit;
+   flash_PIDS[PID_airspeed].integral_limit = g_PIDS[PID_airspeed].integral_limit;
+  	flash_PIDS[PID_airspeed].boot_desired = 0.0;
+  	flash_PIDS[PID_airspeed].loop_id = (float)PID_airspeed;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_airspeed*FL_PID_SIZE),&flash_PIDS[PID_airspeed],FL_PID_SIZE);
+   flash_PIDS[PID_energy_height].kp = g_PIDS[PID_energy_height].kp;
+  	flash_PIDS[PID_energy_height].kd = g_PIDS[PID_energy_height].kd;
+  	flash_PIDS[PID_energy_height].ki = g_PIDS[PID_energy_height].ki;
+  	flash_PIDS[PID_energy_height].effort_limit = g_PIDS[PID_energy_height].effort_limit;
+   flash_PIDS[PID_energy_height].integral_limit = g_PIDS[PID_energy_height].integral_limit;
+  	flash_PIDS[PID_energy_height].boot_desired = 0.0;
+  	flash_PIDS[PID_energy_height].loop_id = (float)PID_energy_height;
+  //writeUserBlock(FL_INDEX_PID_START +(PID_energy_height*FL_PID_SIZE),&flash_PIDS[PID_energy_height],FL_PID_SIZE);
+
+  writeUserBlock(FL_INDEX_PID_START,&flash_PIDS,sizeof(flash_PIDS));
+
+  //Limits
+  writeUserBlock(FL_INDEX_UL_START,&ram_UAV_limits,sizeof(ram_UAV_limits));
+  //CMDS
+  writeUserBlock(FL_INDEX_CMD_START,&g_cmds,sizeof(g_cmds));
+  //Total Commands
+  writeUserBlock(FL_INDEX_CMD_TOTAL_START,&g_number_of_commands,sizeof(g_number_of_commands));
+
+
+}//end writeFlash

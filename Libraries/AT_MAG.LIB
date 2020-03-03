@@ -1,0 +1,124 @@
+/*** BeginHeader cof_read_mag_raw */
+#define LPF_CORNER_FREQ_MAG   30 // (Hz) low pass filter corner freq for gyros
+scofunc void cof_read_mag_raw();
+/*** EndHeader */
+
+/* START FUNCTION DESCRIPTION ********************************************
+cof_read_mag_raw		 <SENSORS.LIB>
+
+DESCRIPTION: Cofunction that reads the micromag 2
+
+RETURN VALUE: None.
+
+END DESCRIPTION **********************************************************/
+nodebug
+scofunc void cof_read_mag_raw()
+{
+	auto long cur_rtc;
+   static long old_rtc;
+   auto float time_since_main_loop_start;
+
+   float temp,alpha;
+   char MM3result[2];
+   char Xmeas[1];
+   char Ymeas[1];
+   auto float raw_calibarated;
+
+   auto float Xh;
+   auto float Yh;
+
+   //char Zmeas
+
+   typedef union
+   	{
+			int intval;
+	   	char bytes[2];
+		}MM3;
+
+	MM3 MMx, MMy, MMz;
+
+   Xmeas[0] = 0x72;
+   Ymeas[0] = 0x71;
+
+   while(1)
+    {
+        cur_rtc = MS_TIMER;
+        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+        if(time_since_main_loop_start < COF_READ_MAG_RAW_TIME_SLOT)
+            break;
+        else
+            yield;
+    }
+   old_rtc = MS_TIMER;
+
+
+   waitfor(BitRdPortI(PBDR, 4));          //wait for a2d cs to go high
+   BitWrPortI(PEDR,&PEDRShadow,0,2);		//Take SSNOT Pin LOW
+
+	BitWrPortI(PEDR,&PEDRShadow,0,1);		//Take PB7 (RESET of MicroMag3) LOW
+	BitWrPortI(PEDR,&PEDRShadow,1,1);		//Take PB7 (RESET of MicroMag3) HIGH
+	BitWrPortI(PEDR,&PEDRShadow,0,1);		//Take PB7 (RESET of MicroMag3) LOW again
+
+	SPIWrite(Xmeas, 1); //X_MEAS byte transfer to MicroMag3
+
+	BitWrPortI(PEDR,&PEDRShadow,1,2);		//Take SSNOT Pin HIGH
+   waitfor(BitRdPortI(PEDR, 0));          //wait for DRDY to go HIGH
+
+   BitWrPortI(PEDR,&PEDRShadow,0,2);		//Take SSNOT Pin LOW
+
+	SPIRead(MM3result, 2); //1 byte transfer from MicroMag
+	BitWrPortI(PEDR,&PBDRShadow,1,2);		//Take SSNOT Pin HIGH
+
+	MMx.bytes[1] = MM3result[0];
+	MMx.bytes[0] = MM3result[1];
+
+	//Read the Y axis of the MicroMag
+
+   waitfor(BitRdPortI(PBDR, 4));          //wait for a2d cs to go high
+   BitWrPortI(PEDR,&PEDRShadow,0,2);		//Take SSNOT Pin LOW
+
+	BitWrPortI(PEDR,&PEDRShadow,0,1);		//Take PB7 (RESET of MicroMag3) LOW
+	BitWrPortI(PEDR,&PEDRShadow,1,1);		//Take PB7 (RESET of MicroMag3) HIGH
+   BitWrPortI(PEDR,&PEDRShadow,0,1);		//Take PB7 (RESET of MicroMag3) LOW again
+
+	SPIWrite(Ymeas, 1); //Y_MEAS byte transfer to MicroMag
+
+	BitWrPortI(PEDR,&PEDRShadow,1,2);		//Take SSNOT Pin HIGH
+   waitfor(BitRdPortI(PEDR, 0));       	//wait for DRDY to go HIGH
+
+	BitWrPortI(PEDR,&PEDRShadow,0,2);		//Take SSNOT Pin LOW
+
+	SPIRead(MM3result, 2); //1 byte transfer from MicroMag3
+	BitWrPortI(PEDR,&PBDRShadow,1,2);		//Take SSNOT Pin HIGH
+
+	MMy.bytes[1] = MM3result[0];
+	MMy.bytes[0] = MM3result[1];
+
+   temp = m_floats[MF_DT] * LPF_CORNER_FREQ_MAG;
+   alpha = temp/(1+temp);
+
+  	raw_calibarated = (((float)MMx.intval)-ram_UAV_limits[UL_MAG_XOFF])/ram_UAV_limits[UL_MAG_XSF];
+   m_floats[MF_MAG_X] = (1-alpha)*m_floats[MF_MAG_X] + (alpha)*raw_calibarated;
+   raw_calibarated = (((float)MMy.intval)-ram_UAV_limits[UL_MAG_YOFF])/ram_UAV_limits[UL_MAG_YSF];
+   m_floats[MF_MAG_Y] = (1-alpha)*m_floats[MF_MAG_Y] + (alpha)*raw_calibarated;
+
+   m_floats[MF_MAG_Z] =  sin(ram_UAV_limits[UL_MAG_INCLINATION])*ram_UAV_limits[UL_MAG_TOTAL];
+   m_floats[MF_MAG_Z] += m_floats[MF_MAG_X]*sin(m_floats[MF_THETA]);
+   m_floats[MF_MAG_Z] -= m_floats[MF_MAG_Y]*cos(m_floats[MF_THETA])*sin(m_floats[MF_PHI]);
+
+   temp = cos(m_floats[MF_THETA])*cos(m_floats[MF_PHI]);
+   if (temp == 0.0)  //catch divide by zero
+   	temp = 0.001;
+	m_floats[MF_MAG_Z] /= temp;
+
+
+   Xh = m_floats[MF_MAG_X]*cos(m_floats[MF_THETA]);
+   Xh += m_floats[MF_MAG_Y]*sin(m_floats[MF_THETA])*sin(m_floats[MF_PHI]);
+   Xh += m_floats[MF_MAG_Z]*cos(m_floats[MF_PHI])*sin(m_floats[MF_THETA]);
+
+   Yh = m_floats[MF_MAG_Y]*cos(m_floats[MF_PHI]);
+   Yh -= m_floats[MF_MAG_Z]*sin(m_floats[MF_PHI]);
+
+   m_floats[MF_PSI_MAG] = atan2(-Yh,Xh);
+
+}//end cof_read_mag_raw
