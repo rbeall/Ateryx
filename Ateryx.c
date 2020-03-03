@@ -80,8 +80,8 @@ static xmem int16_t	m_ints[NUMBER_OF_INTS];
 static xmem float		m_floats[NUMBER_OF_FLOATS];
 static float			ram_UAV_limits[NUMBER_OF_UAV_LIMITS];
 
-cmd g_cmds[256];								 // command structures holding UAV's flight plan
-stack g_cmd_stack;							 // command stack structure used in the navigation library
+cmd g_cmds[256];								// command structures holding UAV's flight plan
+stack g_cmd_stack;							// command stack structure used in the navigation library
 static unsigned int g_number_of_commands;
 
 PID_loop g_PIDS[9];		// PID feedback control structures
@@ -141,116 +141,116 @@ nodebug
 xmem  void main(void)
 {
 //----Local Variables----//
-    int i;
+		int i;
 
 //----Initialization----//
-    g_old_time = 0;
-    g_main_loop_start_time = 0;
+		g_old_time = 0;
+		g_main_loop_start_time = 0;
 
-    //Init temp comp vars
-    g_ax_scale =0;
-    g_ay_scale =0;
-    g_az_scale =0;
-    g_press_to_alt[2] = 81.164;
-    g_press_to_alt[1] = -4199.3;
-    g_press_to_alt[0] = 44192.0; //standard day offset
+		//Init temp comp vars
+		g_ax_scale =0;
+		g_ay_scale =0;
+		g_az_scale =0;
+		g_press_to_alt[2] = 81.164;
+		g_press_to_alt[1] = -4199.3;
+		g_press_to_alt[0] = 44192.0; //standard day offset
 
-    // Clear out Arrays
-    memset(m_bytes,  0, sizeof(m_bytes));
-    memset(m_ints,   0, sizeof(m_ints));
-    memset(m_floats, 0, sizeof(m_floats));
-    memset(ram_UAV_limits, 0, sizeof(ram_UAV_limits));
-    memset(sensors,  0, sizeof(sensors));
-    memset(&g_tc,  0, sizeof(g_tc));
-    memset(g_PIDS,   0, sizeof(g_PIDS));
-    for(i=0; i<15; i++)
-        g_PIDS[i].loop_id = i;
-    memset(g_servos, 0, sizeof(g_servos));
+		// Clear out Arrays
+		memset(m_bytes,  0, sizeof(m_bytes));
+		memset(m_ints,   0, sizeof(m_ints));
+		memset(m_floats, 0, sizeof(m_floats));
+		memset(ram_UAV_limits, 0, sizeof(ram_UAV_limits));
+		memset(sensors,  0, sizeof(sensors));
+		memset(&g_tc,  0, sizeof(g_tc));
+		memset(g_PIDS,   0, sizeof(g_PIDS));
+		for(i=0; i<15; i++)
+				g_PIDS[i].loop_id = i;
+		memset(g_servos, 0, sizeof(g_servos));
 
-    g_number_of_commands = 1;
-    memset(&g_cmds,      0, sizeof(g_cmds));
-    memset(&g_cmd_stack, 0, sizeof(g_cmd_stack));
-    m_ints[MI_UAV_MODE] = MAV_CMD_NAV_LOITER_UNLIM;
+		g_number_of_commands = 1;
+		memset(&g_cmds,      0, sizeof(g_cmds));
+		memset(&g_cmd_stack, 0, sizeof(g_cmd_stack));
+		m_ints[MI_UAV_MODE] = MAV_CMD_NAV_LOITER_UNLIM;
 
-    m_ints[MI_FLC] &=FLC_ELEV_RESET;
-    m_ints[MI_FLC] |= FLC_ELEV_PITCH;
-    m_ints[MI_FLC] &=FLC_AILE_RESET;
-    m_ints[MI_FLC] |= FLC_AILE_ROLL;
-    m_ints[MI_FLC] &=FLC_ROLL_RESET;
-    m_ints[MI_FLC] |= FLC_ROLL_HEADING;
-    m_ints[MI_FLC] &=FLC_THRO_RESET;
-    m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
+		m_ints[MI_FLC] &=FLC_ELEV_RESET;
+		m_ints[MI_FLC] |= FLC_ELEV_PITCH;
+		m_ints[MI_FLC] &=FLC_AILE_RESET;
+		m_ints[MI_FLC] |= FLC_AILE_ROLL;
+		m_ints[MI_FLC] &=FLC_ROLL_RESET;
+		m_ints[MI_FLC] |= FLC_ROLL_HEADING;
+		m_ints[MI_FLC] &=FLC_THRO_RESET;
+		m_ints[MI_FLC] |= FLC_THRO_EH_PITCH_AIRSPD;
 
-    memset(&g_crc_seeds, 0, sizeof(g_crc_seeds));
+		memset(&g_crc_seeds, 0, sizeof(g_crc_seeds));
 #ifdef USE_HIL
-	 m_bytes[MB_HIL_STATUS] = 1;
+	m_bytes[MB_HIL_STATUS] = 1;
 #endif
 
 
-    //Init GPS vars
-    gps_fix_flag =0;
-    chk_a = 0;
-    chk_b = 0;
+		//Init GPS vars
+		gps_fix_flag =0;
+		chk_a = 0;
+		chk_b = 0;
 
-    q0 = 1.0;
-    q1 = 0.0;
-    q2 = 0.0;
-    q3 = 0.0;
-    phi_est = 0.0;
-    theta_est = 0.0;
-    psi_est = 0.0;
+		q0 = 1.0;
+		q1 = 0.0;
+		q2 = 0.0;
+		q3 = 0.0;
+		phi_est = 0.0;
+		theta_est = 0.0;
+		psi_est = 0.0;
 
-	//init MAVlink vars
-   mavlink_system.sysid = 7;  ///< Used by the MAVLink message_xx_send() convenience function
-   mavlink_system.compid = 1; ///< Used by the MAVLink message_xx_send() convenience function
-   mavlink_system.type = 0;    ///< Unused, can be used by user to store the system's type
-   mavlink_system.state = 0;   ///< Unused, can be used by user to store the system's state
-   mavlink_system.mode = 0;    ///< Unused, can be used by user to store the system's mode
+		//init MAVlink vars
+		mavlink_system.sysid = 7;  ///< Used by the MAVLink message_xx_send() convenience function
+		mavlink_system.compid = 1; ///< Used by the MAVLink message_xx_send() convenience function
+		mavlink_system.type = 0;    ///< Unused, can be used by user to store the system's type
+		mavlink_system.state = 0;   ///< Unused, can be used by user to store the system's state
+		mavlink_system.mode = 0;    ///< Unused, can be used by user to store the system's mode
 
-   g_mavlink_target_sysid = 255;
-   g_mavlink_target_compid = 0;
+		g_mavlink_target_sysid = 255;
+		g_mavlink_target_compid = 0;
 
-	packet_sequence = 0;
+		packet_sequence = 0;
 
-   g_timerb_match = 0x00;
+		g_timerb_match = 0x00;
 
-    Init_Ateryx();
-    paledoff(Rx_led);
-    paledoff(Tx_led);
-    paledoff(GPS_led);
+		Init_Ateryx();
+		paledoff(Rx_led);
+		paledoff(Tx_led);
+		paledoff(GPS_led);
 
-    readFlash(0); //restore all values from flash
-    init_servos();
+		readFlash(0); //restore all values from flash
+		init_servos();
 
-    MsDelay(100);
-    for (i=0;i<100;i++)
-    	{
-    		gather_sensors();
-      }
-    zero_pressure(1);
+		MsDelay(100);
+		for (i=0;i<100;i++)
+			{
+				gather_sensors();
+			}
+		zero_pressure(1);
 
-    led_tester();
+		led_tester();
 
-    init_soft_pwm();
+		init_soft_pwm();
 
-    printf("\r\nAteryx 2.5 Init");
+		printf("\r\nAteryx 2.5 Init");
 //----------------------------------------------------------//
 //                        MAIN Loop                         //
 //----------------------------------------------------------//
 while(1)
 {
-   //Calculate dt (time between loops in seconds)
-   m_floats[MF_DT] = (float)(MS_TIMER - g_old_time)*10e-4;
-   g_old_time = MS_TIMER;
-   g_main_loop_start_time = MS_TIMER;
+	//Calculate dt (time between loops in seconds)
+	m_floats[MF_DT] = (float)(MS_TIMER - g_old_time)*10e-4;
+	g_old_time = MS_TIMER;
+	g_main_loop_start_time = MS_TIMER;
 
 #ifndef USE_HIL
 	gather_sensors();
-   estimate_states();
+	estimate_states();
 #endif
 
-   low_level_control();
-   update_servos();
+	low_level_control();
+	update_servos();
 
 //----------------------------------------------------------//
 //                        Co-States                         //
@@ -292,4 +292,3 @@ costate{ wfd cof_check_if_airborne(); }
 //costate{ wfd cof_blink_led(500,GPS_led,1); }
 }//End Main while
 }//End Main
-

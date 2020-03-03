@@ -14,35 +14,35 @@ nodebug
 scofunc void cof_debug_prints()
 {
 
-  //paledon(GPS_Led)
-  waitfor(DelayMs(200));
-  //printf("\r %f",m_floats[MF_DT]);
-  //printf("\r %f %f %f %f %f %f",sensors[ACCEL_X].raw,sensors[ACCEL_X].raw_filt,sensors[ACCEL_Y].raw,sensors[ACCEL_Y].raw_filt,sensors[ACCEL_Z].raw,sensors[ACCEL_Z].raw_filt);
-  //printf("\r %f %f %f %f %f %f",sensors[GYRO_P].raw,sensors[GYRO_P].raw_filt,sensors[GYRO_Q].raw,sensors[GYRO_Q].raw_filt,sensors[GYRO_R].raw,sensors[GYRO_R].raw_filt);
-  //printf("\r %f %f %f %f",sensors[DIFPRES].raw,sensors[DIFPRES].raw_filt,sensors[ABSPRES].raw,sensors[ABSPRES].raw_filt);
-  //printf("\r %f %f", m_floats[MF_INDICATED_AIRSPEED], sensors[DIFPRES].calibrated);
-  printf("\r %f %f %f %f",m_floats[MF_ALT_MSL],sensors[ABSPRES].calibrated,sensors[ABSPRES].raw,sensors[ABSPRES].raw_filt);
-  //printf("\r %f %f %f %f %f %f",sensors[TEMP_P].raw,sensors[TEMP_P].raw_filt,sensors[TEMP_Q].raw,sensors[TEMP_Q].raw_filt,sensors[TEMP_R].raw,sensors[TEMP_R].raw_filt);
+	//paledon(GPS_Led)
+	waitfor(DelayMs(200));
+	//printf("\r %f",m_floats[MF_DT]);
+	//printf("\r %f %f %f %f %f %f",sensors[ACCEL_X].raw,sensors[ACCEL_X].raw_filt,sensors[ACCEL_Y].raw,sensors[ACCEL_Y].raw_filt,sensors[ACCEL_Z].raw,sensors[ACCEL_Z].raw_filt);
+	//printf("\r %f %f %f %f %f %f",sensors[GYRO_P].raw,sensors[GYRO_P].raw_filt,sensors[GYRO_Q].raw,sensors[GYRO_Q].raw_filt,sensors[GYRO_R].raw,sensors[GYRO_R].raw_filt);
+	//printf("\r %f %f %f %f",sensors[DIFPRES].raw,sensors[DIFPRES].raw_filt,sensors[ABSPRES].raw,sensors[ABSPRES].raw_filt);
+	//printf("\r %f %f", m_floats[MF_INDICATED_AIRSPEED], sensors[DIFPRES].calibrated);
+	printf("\r %f %f %f %f",m_floats[MF_ALT_MSL],sensors[ABSPRES].calibrated,sensors[ABSPRES].raw,sensors[ABSPRES].raw_filt);
+	//printf("\r %f %f %f %f %f %f",sensors[TEMP_P].raw,sensors[TEMP_P].raw_filt,sensors[TEMP_Q].raw,sensors[TEMP_Q].raw_filt,sensors[TEMP_R].raw,sensors[TEMP_R].raw_filt);
 
-  //printf("\r g_tc.ax[scale0]= %f g_tc.ax[scale1]= %f",g_tc.ax[AX_SCALE0],g_tc.ax[AX_SCALE1]);
-  //printf("\r %f %f %f",sensors[ACCEL_X].calibrated,sensors[ACCEL_Y].calibrated,sensors[ACCEL_Z].calibrated);
-  //printf("\r %f %f %f",sensors[GYRO_P].calibrated,sensors[GYRO_Q].calibrated,sensors[GYRO_R].calibrated);
-  //printf("\r %f %f",sensors[DIFPRES].calibrated,sensors[ABSPRES].calibrated);
-  //printf("\r %f %f %f",sensors[TEMP_P].calibrated,sensors[TEMP_Q].calibrated,sensors[TEMP_R].calibrated);
+	//printf("\r g_tc.ax[scale0]= %f g_tc.ax[scale1]= %f",g_tc.ax[AX_SCALE0],g_tc.ax[AX_SCALE1]);
+	//printf("\r %f %f %f",sensors[ACCEL_X].calibrated,sensors[ACCEL_Y].calibrated,sensors[ACCEL_Z].calibrated);
+	//printf("\r %f %f %f",sensors[GYRO_P].calibrated,sensors[GYRO_Q].calibrated,sensors[GYRO_R].calibrated);
+	//printf("\r %f %f",sensors[DIFPRES].calibrated,sensors[ABSPRES].calibrated);
+	//printf("\r %f %f %f",sensors[TEMP_P].calibrated,sensors[TEMP_Q].calibrated,sensors[TEMP_R].calibrated);
 
-  //printf("\r %f %f",m_floats[MF_MAG_X],m_floats[MF_MAG_Y]);
+	//printf("\r %f %f",m_floats[MF_MAG_X],m_floats[MF_MAG_Y]);
 
-  //printf("\r %f %f %f %f", q0, q1, q2, q3);
+	//printf("\r %f %f %f %f", q0, q1, q2, q3);
 
-  //printf("\r\n %d %f %f",m_bytes[MB_GPS_FIX_QUALITY],m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
+	//printf("\r\n %d %f %f",m_bytes[MB_GPS_FIX_QUALITY],m_floats[MF_GPS_LAT],m_floats[MF_GPS_LON]);
 
-  //printf("\r %f %f %f", m_floats[MF_PHI]*RAD2DEG,m_floats[MF_THETA]*RAD2DEG,m_floats[MF_PSI]*RAD2DEG);
-  //printf("\r %f %f",m_floats[MF_BATTERY_VOLTAGE],sensors[BATTVOLTS].raw  = (float)get_ads7870(ADC_BATT) * A2D_12BIT_SCALE * RES_DIV_BATT);
-  //printf("\r %f",m_floats[MF_DEBUG_1]);
+	//printf("\r %f %f %f", m_floats[MF_PHI]*RAD2DEG,m_floats[MF_THETA]*RAD2DEG,m_floats[MF_PSI]*RAD2DEG);
+	//printf("\r %f %f",m_floats[MF_BATTERY_VOLTAGE],sensors[BATTVOLTS].raw  = (float)get_ads7870(ADC_BATT) * A2D_12BIT_SCALE * RES_DIV_BATT);
+	//printf("\r %f",m_floats[MF_DEBUG_1]);
 
-  //printf("\r roll_rate_kp= %f roll_kp= %f", g_PIDS[PID_roll_rate].kp, g_PIDS[PID_roll].kp);
-  //printf("\r pitch_kp= %f roll_kp= %f", g_PIDS[PID_pitch].kp, g_PIDS[PID_roll].kp);
-  //printf("\r size of g_tc= %d",sizeof(g_tc));
+	//printf("\r roll_rate_kp= %f roll_kp= %f", g_PIDS[PID_roll_rate].kp, g_PIDS[PID_roll].kp);
+	//printf("\r pitch_kp= %f roll_kp= %f", g_PIDS[PID_pitch].kp, g_PIDS[PID_roll].kp);
+	//printf("\r size of g_tc= %d",sizeof(g_tc));
 }//end cof_debug_prints
 
 /*** BeginHeader cof_check_if_airborne */
@@ -51,26 +51,26 @@ scofunc void cof_check_if_airborne();
 nodebug
 scofunc void cof_check_if_airborne()
 {
-   auto long cur_rtc,old_rtc;
-   auto float time_since_main_loop_start;
+	auto long cur_rtc,old_rtc;
+	auto float time_since_main_loop_start;
 
-   waitfor(DelayMs(1000));
+	waitfor(DelayMs(1000));
 
-   while(1)
-    {
-        cur_rtc = MS_TIMER;
-        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
-        if(time_since_main_loop_start < COF_AIRBORNE_DETECT_TIME_SLOT)
-            break;
-        else
-            yield;
-    }
+	while(1)
+		{
+			cur_rtc = MS_TIMER;
+			time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+			if(time_since_main_loop_start < COF_AIRBORNE_DETECT_TIME_SLOT)
+					break;
+			else
+					yield;
+		}
 
-    m_bytes[MB_AIRBORNE] = 0;
-    if( (m_floats[MF_GPS_SPEED]>3.0) && (m_floats[MF_INDICATED_AIRSPEED]>3.0) && (m_floats[MF_ALT_MSL]> 15.24) )
-    	{
-      	m_bytes[MB_AIRBORNE] = 1;
-      }
+		m_bytes[MB_AIRBORNE] = 0;
+		if( (m_floats[MF_GPS_SPEED]>3.0) && (m_floats[MF_INDICATED_AIRSPEED]>3.0) && (m_floats[MF_ALT_MSL]> 15.24) )
+			{
+				m_bytes[MB_AIRBORNE] = 1;
+			}
 
 }//end cof_check_if_airborne
 /*** BeginHeader MsDelay */
@@ -78,10 +78,10 @@ void MsDelay(int MS);
 /*** EndHeader */
 void MsDelay(int MS)
 {
-   long SavTimer, TimerDiff;
-   TimerDiff = 0;
-   SavTimer = MS_TIMER;
-   while(TimerDiff < MS) {TimerDiff = MS_TIMER - SavTimer;}
+	long SavTimer, TimerDiff;
+	TimerDiff = 0;
+	SavTimer = MS_TIMER;
+	while(TimerDiff < MS) {TimerDiff = MS_TIMER - SavTimer;}
 }// end of MsDelay
 
 /*** BeginHeader paledon */
@@ -90,8 +90,8 @@ void paledon(int led);
 
 void paledon(int led)        	//turns on leds
 {
-   //printf("\r led on");
-   BitWrPortI(PADR, &PADRShadow, 1, led);
+	//printf("\r led on");
+	BitWrPortI(PADR, &PADRShadow, 1, led);
 }
 
 /*** BeginHeader paledoff */
@@ -100,8 +100,8 @@ void paledoff(int led);
 
 void paledoff(int led)        	//turns on leds
 {
-   //printf("\r led off");
-   BitWrPortI(PADR, &PADRShadow, 0, led);
+	//printf("\r led off");
+	BitWrPortI(PADR, &PADRShadow, 0, led);
 
 }
 /*** BeginHeader cof_blink_led */
@@ -109,13 +109,13 @@ cofunc void cof_blink_led(int time_on, int led, int flag);
 /*** EndHeader */
 cofunc void cof_blink_led(int time_on, int led, int flag)
 {
-  if (flag == 1)
-   {
-   	paledon(led);
-   	waitfor(DelayMs(time_on));
-   	paledoff(led);
-      waitfor(DelayMs(time_on));
-   }
+	if (flag == 1)
+		{
+			paledon(led);
+			waitfor(DelayMs(time_on));
+			paledoff(led);
+			waitfor(DelayMs(time_on));
+		}
 }
 
 /*** BeginHeader led_tester */
@@ -171,19 +171,19 @@ void get_batt_volts(void);
 void get_batt_volts(void)
 {
 
-   float A0,B1;
-   //float batt_volts[2];
-   B1 = 0.98;
-   A0 = 1.0-B1;
+	float A0,B1;
+	//float batt_volts[2];
+	B1 = 0.98;
+	A0 = 1.0-B1;
 
-   batt_volts[0] = (float)get_ads7870(1) * a2d_12bit_scale * res_div_batt;
+	batt_volts[0] = (float)get_ads7870(1) * a2d_12bit_scale * res_div_batt;
 	batt_volts[0] = (A0 * batt_volts[0]) + (B1 * batt_volts[1]);	//first order LP filter
 
 	if (batt_volts[0]-batt_volts[1] > 0.5)		//catch spurius measurements from affecting filter
-   {
-   	batt_volts[0] = batt_volts[1];
-   }
-   batt_volts[1] = batt_volts[0];
+	{
+		batt_volts[0] = batt_volts[1];
+	}
+	batt_volts[1] = batt_volts[0];
 
 }//end get_batt_volts
 
@@ -193,27 +193,27 @@ void get_current(void);
 
 void get_current(void)
 {
-   float A0,B1;
+	float A0,B1;
 
-   B1 = 0.95;
-   A0 = 1.0-B1;
+	B1 = 0.95;
+	A0 = 1.0-B1;
 
-   current_volts[0] = (float)get_ads7870(6) * a2d_12bit_scale * res_div_current;
+	current_volts[0] = (float)get_ads7870(6) * a2d_12bit_scale * res_div_current;
 	current_volts[0] = (A0 * current_volts[0]) + (B1 * current_volts[1]);	//first order LP filter
 
 	if (current_volts[0]-current_volts[1] > 0.5)		//catch spurius measurements from affecting filter
-   {
-   	current_volts[0] = current_volts[1];
-   }
-   current_volts[1] = current_volts[0];
+	{
+		current_volts[0] = current_volts[1];
+	}
+	current_volts[1] = current_volts[0];
 
-   current = (current_volts[0] - 0.474)/0.133; // in Amps
+	current = (current_volts[0] - 0.474)/0.133; // in Amps
 
-   	T1_current = MS_TIMER;		//determine dt since last read in s
-      dt_current = (T1_current - T0_current)*10e-4;
-      T0_current = T1_current;
+		T1_current = MS_TIMER;		//determine dt since last read in s
+			dt_current = (T1_current - T0_current)*10e-4;
+			T0_current = T1_current;
 
-   current_used = current_used + current*(dt_current/3600.0);
+	current_used = current_used + current*(dt_current/3600.0);
 
 }//end get_current()
 
@@ -225,9 +225,9 @@ float calc_mean(float *float_array, int num_pts)
 {
 	int i;
 	float mean;
-   float mean_bias; //avergage bias due to rounding
+	float mean_bias; //avergage bias due to rounding
 
-   mean_bias = 0.007817494;
+	mean_bias = 0.007817494;
 
 	mean = 0;
 	for(i=0;i<num_pts-1;i++)
@@ -235,7 +235,7 @@ float calc_mean(float *float_array, int num_pts)
 		mean += float_array[i];
 	}
 	mean /= num_pts;
-   mean = mean+mean_bias;
+	mean = mean+mean_bias;
 	return mean;
 }
 
@@ -245,12 +245,12 @@ float abs_float(float num);
 
 float abs_float(float num)
 	{
-      if (num < 0)
-      	{
-            num = num*-1;
-         }
-   return num;
-   }
+			if (num < 0)
+				{
+						num = num*-1;
+				}
+	return num;
+	}
 
 /*** BeginHeader flttoa */
 void flttoa(float x, char *str, int prec);
@@ -259,9 +259,9 @@ void flttoa(float x, char *str, int prec);
 void flttoa(float x_in, char *str, int prec)
 {
 	int ie, i, k, ndig;
-   float x;
+	float x;
 
-   x = x_in;
+	x = x_in;
 	ndig = (prec<=0) ? 7: (prec > 22 ? 23: prec+1);
 	ie = 0;
 
@@ -310,27 +310,27 @@ float AT_poly(float x,int n, float* c);
 /*** EndHeader ***/
 float AT_poly(float x,int n, float* c)
 {
-  float out;
+	float out;
 
-  switch (n)
-  {
-  	  case 1:
-	    {
-	    out = (c[1]*x) + c[0];
-	    }
-	    break;
-	  case 2:
-	    {
-	    out = (c[2]*x*x) + (c[1]*x) + c[0];
-	    }
-	    break;
-	  default:
-	   {
-	     out = 0;
-	   }
-	   break;
-   }
-  return out;
+	switch (n)
+	{
+			case 1:
+			{
+				out = (c[1]*x) + c[0];
+			}
+			break;
+		case 2:
+			{
+				out = (c[2]*x*x) + (c[1]*x) + c[0];
+			}
+			break;
+		default:
+			{
+				out = 0;
+			}
+		break;
+	}
+	return out;
 
 }// end AT_poly
 
@@ -340,13 +340,13 @@ void unwrap_angle(float* angle);
 void unwrap_angle(float* angle)
 {
 	if (*angle > 3.1415926535)
-   	{
-      	*angle -= 6.283185307;
-      }
-   if (*angle < -3.1415926535)
-   	{
-   		*angle += 6.283185307;
-   	}
+		{
+				*angle -= 6.283185307;
+			}
+	if (*angle < -3.1415926535)
+		{
+			*angle += 6.283185307;
+		}
 }//end unwrap_angle
 
 

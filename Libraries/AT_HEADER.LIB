@@ -5,7 +5,7 @@ This library contains definitions and structures used by all libraries.
 The information in this library is the information that changes less frequently
 
 Ateryx Autopilot (TM)
-Copyright © 2011. All rights reserved.
+Copyright ï¿½ 2011. All rights reserved.
 
 The Ateryx Autopilot, hardware, software, and technical data, are protected by
 copyright law and international treaties.  Unauthorized reproduction or distribution
@@ -492,20 +492,20 @@ enum
 #define PID_pitch				  		0
 #define PID_pitch_rate				1
 #define PID_roll				  		2
-#define PID_roll_rate				3
+#define PID_roll_rate	        3
 #define PID_yaw_rate					4
-#define PID_heading					5
+#define PID_heading	          5
 #define PID_airspeed  				6
 #define PID_energy_height			7
-#define PID_heading2  		  		8
+#define PID_heading2  		  	8
 #define PID_testloop1		  		9
-#define PID_testloop2 		  		10
+#define PID_testloop2 		  	10
 #define PID_testloop3			  	11
 #define PID_testloop4			  	12
 #define PID_testloop5			  	13
 #define PID_testloop6			  	14
 
-#define MAX_PID_LOOP_INDEX		  	14		 // =15 loops
+#define MAX_PID_LOOP_INDEX		14		 // =15 loops
 
 #define DO_NOTHING 0
 #define CONFIGURE_CMD 1

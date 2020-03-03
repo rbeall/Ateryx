@@ -9,130 +9,129 @@ void low_level_control(void);
 /*** EndHeader ***/
 void low_level_control(void)
 {
-   //----RC out----
-   //g_servos[SERVO_OUT].aileron = g_servos[SERVO_RX].aileron;
-   //g_servos[SERVO_OUT].elevator = g_servos[SERVO_RX].elevator;
-   //g_servos[SERVO_OUT].throttle = g_servos[SERVO_RX].throttle;
-   //g_servos[SERVO_OUT].rudder = g_servos[SERVO_RX].rudder;
+	//----RC out----
+	//g_servos[SERVO_OUT].aileron = g_servos[SERVO_RX].aileron;
+	//g_servos[SERVO_OUT].elevator = g_servos[SERVO_RX].elevator;
+	//g_servos[SERVO_OUT].throttle = g_servos[SERVO_RX].throttle;
+	//g_servos[SERVO_OUT].rudder = g_servos[SERVO_RX].rudder;
 
 //----Altitude and Airspeed Flight Laws----
 	switch (m_ints[MI_FLC] & (~FLC_THRO_RESET))
-   	{
-	      case FLC_THRO_EH:
-         	{
-               g_PIDS[PID_energy_height].desired = ((g_PIDS[PID_airspeed].desired * g_PIDS[PID_airspeed].desired)/(2*GRAVITY))+g_cmd_stack.desired_altitude;
-	            m_floats[MF_ENERGY_HEIGHT] = ((m_floats[MF_INDICATED_AIRSPEED] * m_floats[MF_INDICATED_AIRSPEED])/(2*GRAVITY)) + m_floats[MF_ALT_MSL];
-	            PID_calculate(&g_PIDS[PID_energy_height],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            g_servos[SERVO_OUT].throttle += ram_UAV_limits[UL_TRIM_THROTTLE];
-               g_cmd_stack.altitude_error = g_cmd_stack.desired_altitude - m_floats[MF_ALT_MSL];
-               break;
-            }
-         case FLC_PITCH_AIRSPD:
-         	{
-               g_PIDS[PID_airspeed].desired = g_cmd_stack.desired_airspeed;
-   	         saturate_cmd(&g_PIDS[PID_airspeed].desired,&ram_UAV_limits[UL_IAS_UPPER_LIMIT],&ram_UAV_limits[UL_IAS_LOWER_LIMIT]);
-	            PID_calculate(&g_PIDS[PID_airspeed],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            g_cmd_stack.airspeed_error = g_PIDS[PID_airspeed].error;
+		{
+				case FLC_THRO_EH:
+					{
+						g_PIDS[PID_energy_height].desired = ((g_PIDS[PID_airspeed].desired * g_PIDS[PID_airspeed].desired)/(2*GRAVITY))+g_cmd_stack.desired_altitude;
+						m_floats[MF_ENERGY_HEIGHT] = ((m_floats[MF_INDICATED_AIRSPEED] * m_floats[MF_INDICATED_AIRSPEED])/(2*GRAVITY)) + m_floats[MF_ALT_MSL];
+						PID_calculate(&g_PIDS[PID_energy_height],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						g_servos[SERVO_OUT].throttle += ram_UAV_limits[UL_TRIM_THROTTLE];
+						g_cmd_stack.altitude_error = g_cmd_stack.desired_altitude - m_floats[MF_ALT_MSL];
+						break;
+					}
+				case FLC_PITCH_AIRSPD:
+					{
+						g_PIDS[PID_airspeed].desired = g_cmd_stack.desired_airspeed;
+						saturate_cmd(&g_PIDS[PID_airspeed].desired,&ram_UAV_limits[UL_IAS_UPPER_LIMIT],&ram_UAV_limits[UL_IAS_LOWER_LIMIT]);
+						PID_calculate(&g_PIDS[PID_airspeed],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						g_cmd_stack.airspeed_error = g_PIDS[PID_airspeed].error;
+						break;
+					}
+				case FLC_THRO_EH_PITCH_AIRSPD:
+					{
+						g_PIDS[PID_energy_height].desired = ((g_PIDS[PID_airspeed].desired * g_PIDS[PID_airspeed].desired)/(2*GRAVITY))+g_cmd_stack.desired_altitude;
+						m_floats[MF_ENERGY_HEIGHT] = ((m_floats[MF_INDICATED_AIRSPEED] * m_floats[MF_INDICATED_AIRSPEED])/(2*GRAVITY)) + m_floats[MF_ALT_MSL];
+						PID_calculate(&g_PIDS[PID_energy_height],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						g_servos[SERVO_OUT].throttle += ram_UAV_limits[UL_TRIM_THROTTLE];
 
-               break;
-            }
-         case FLC_THRO_EH_PITCH_AIRSPD:
-         	{
-               g_PIDS[PID_energy_height].desired = ((g_PIDS[PID_airspeed].desired * g_PIDS[PID_airspeed].desired)/(2*GRAVITY))+g_cmd_stack.desired_altitude;
-	            m_floats[MF_ENERGY_HEIGHT] = ((m_floats[MF_INDICATED_AIRSPEED] * m_floats[MF_INDICATED_AIRSPEED])/(2*GRAVITY)) + m_floats[MF_ALT_MSL];
-	            PID_calculate(&g_PIDS[PID_energy_height],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            g_servos[SERVO_OUT].throttle += ram_UAV_limits[UL_TRIM_THROTTLE];
-
-               g_PIDS[PID_airspeed].desired = g_cmd_stack.desired_airspeed;
-   	         saturate_cmd(&g_PIDS[PID_airspeed].desired,&ram_UAV_limits[UL_IAS_UPPER_LIMIT],&ram_UAV_limits[UL_IAS_LOWER_LIMIT]);
-	            PID_calculate(&g_PIDS[PID_airspeed],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            g_cmd_stack.airspeed_error = g_PIDS[PID_airspeed].error;
-               g_cmd_stack.altitude_error = g_cmd_stack.desired_altitude - m_floats[MF_ALT_MSL];
-               break;
-            }
-      }//end altitude and airspeed switch case
+						g_PIDS[PID_airspeed].desired = g_cmd_stack.desired_airspeed;
+						saturate_cmd(&g_PIDS[PID_airspeed].desired,&ram_UAV_limits[UL_IAS_UPPER_LIMIT],&ram_UAV_limits[UL_IAS_LOWER_LIMIT]);
+						PID_calculate(&g_PIDS[PID_airspeed],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						g_cmd_stack.airspeed_error = g_PIDS[PID_airspeed].error;
+						g_cmd_stack.altitude_error = g_cmd_stack.desired_altitude - m_floats[MF_ALT_MSL];
+						break;
+					}
+			}//end altitude and airspeed switch case
 
 //---------Lateral Autopilot---------
 	switch (m_ints[MI_FLC] & (~FLC_ROLL_RESET))
-  		{
-      	case FLC_ROLL_HEADING:
-         	{
-               g_PIDS[PID_heading].desired = g_cmd_stack.desired_course;
-   				PID_calculate(&g_PIDS[PID_heading],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
-               break;
-            }
+			{
+				case FLC_ROLL_HEADING:
+					{
+						g_PIDS[PID_heading].desired = g_cmd_stack.desired_course;
+						PID_calculate(&g_PIDS[PID_heading],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						break;
+					}
 
-      }//end roll from heading switch
+			}//end roll from heading switch
 //--------Lateral Stability----------
 	switch (m_ints[MI_FLC] & (~FLC_RUDD_RESET))
-  		{
-      	case FLC_RUDD_YAWRATE:
-         	{
-   	         g_PIDS[PID_yaw_rate].desired = 0.0;
-	            PID_calculate(&g_PIDS[PID_yaw_rate],NORMAL_RESULT,NO_SUM_RESULT,NO_INT);
-               break;
-            }
-         case FLC_RUDD_HEADING:
-         	{
-               //rudder from heading rate
-               break;
-            }
-       }//end rudder switch case
+			{
+				case FLC_RUDD_YAWRATE:
+					{
+						g_PIDS[PID_yaw_rate].desired = 0.0;
+						PID_calculate(&g_PIDS[PID_yaw_rate],NORMAL_RESULT,NO_SUM_RESULT,NO_INT);
+						break;
+					}
+				case FLC_RUDD_HEADING:
+					{
+						//rudder from heading rate
+						break;
+					}
+			}//end rudder switch case
 
 	switch (m_ints[MI_FLC] & (~FLC_AILE_RESET))
-  		{
-         case FLC_AILE_ROLL:
-	         {
-               //g_PIDS[PID_roll].desired = 0.0;
-               g_PIDS[PID_roll].desired = g_cmd_stack.desired_roll;
-	            saturate_cmd(&g_PIDS[PID_roll].desired,&ram_UAV_limits[UL_PHI_UPPER_LIMIT],&ram_UAV_limits[UL_PHI_LOWER_LIMIT]);
-	            PID_calculate(&g_PIDS[PID_roll],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            break;
-	         }
-	      case FLC_AILE_ROLL_RATE:
-	         {
-	            g_PIDS[PID_roll_rate].desired = 0.0;
-	            PID_calculate(&g_PIDS[PID_roll_rate],NORMAL_RESULT,NO_SUM_RESULT,NO_INT);
-	            break;
-	         }
-	      case FLC_AILE_ROLL_ROLL_RATE:
-	         {
-               g_PIDS[PID_roll].desired = g_cmd_stack.desired_roll;
-	            saturate_cmd(&g_PIDS[PID_roll].desired,&ram_UAV_limits[UL_PHI_UPPER_LIMIT],&ram_UAV_limits[UL_PHI_LOWER_LIMIT]);
-	            PID_calculate(&g_PIDS[PID_roll],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            g_PIDS[PID_roll_rate].desired = 0.0;
-	            PID_calculate(&g_PIDS[PID_roll_rate],NORMAL_RESULT,SUM_RESULT,NO_INT);
-	            break;
-	         }
-     	}//end aileron switch case
+			{
+				case FLC_AILE_ROLL:
+					{
+						//g_PIDS[PID_roll].desired = 0.0;
+						g_PIDS[PID_roll].desired = g_cmd_stack.desired_roll;
+						saturate_cmd(&g_PIDS[PID_roll].desired,&ram_UAV_limits[UL_PHI_UPPER_LIMIT],&ram_UAV_limits[UL_PHI_LOWER_LIMIT]);
+						PID_calculate(&g_PIDS[PID_roll],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						break;
+					}
+				case FLC_AILE_ROLL_RATE:
+					{
+						g_PIDS[PID_roll_rate].desired = 0.0;
+						PID_calculate(&g_PIDS[PID_roll_rate],NORMAL_RESULT,NO_SUM_RESULT,NO_INT);
+						break;
+					}
+				case FLC_AILE_ROLL_ROLL_RATE:
+					{
+						g_PIDS[PID_roll].desired = g_cmd_stack.desired_roll;
+						saturate_cmd(&g_PIDS[PID_roll].desired,&ram_UAV_limits[UL_PHI_UPPER_LIMIT],&ram_UAV_limits[UL_PHI_LOWER_LIMIT]);
+						PID_calculate(&g_PIDS[PID_roll],NORMAL_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						g_PIDS[PID_roll_rate].desired = 0.0;
+						PID_calculate(&g_PIDS[PID_roll_rate],NORMAL_RESULT,SUM_RESULT,NO_INT);
+						break;
+					}
+			}//end aileron switch case
 
 //--------Longitudinal Stability----------
 	switch (m_ints[MI_FLC] & (~FLC_ELEV_RESET))
-   	{
-	      case FLC_ELEV_PITCH:
-	         {
-               //g_PIDS[PID_pitch].desired = 0.0;
-               g_PIDS[PID_pitch].desired = g_cmd_stack.desired_pitch;
-	            saturate_cmd(&g_PIDS[PID_pitch].desired,&ram_UAV_limits[UL_THETA_UPPER_LIMIT],&ram_UAV_limits[UL_THETA_LOWER_LIMIT]);
-	            PID_calculate(&g_PIDS[PID_pitch],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            break;
-	         }
-	      case FLC_ELEV_PITCH_RATE:
-	         {
-	            g_PIDS[PID_pitch_rate].desired = 0.0;
-	            PID_calculate(&g_PIDS[PID_pitch_rate],INVERT_RESULT,NO_SUM_RESULT,NO_INT);
-               break;
-	         }
-	      case FLC_ELEV_PITCH_PITCH_RATE:
-	         {
-	            g_PIDS[PID_pitch].desired = g_cmd_stack.desired_pitch;
-	            saturate_cmd(&g_PIDS[PID_pitch].desired,&ram_UAV_limits[UL_THETA_UPPER_LIMIT],&ram_UAV_limits[UL_THETA_LOWER_LIMIT]);
-	            PID_calculate(&g_PIDS[PID_pitch],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
-	            g_PIDS[PID_pitch_rate].desired = 0.0;
-	            PID_calculate(&g_PIDS[PID_pitch_rate],INVERT_RESULT,SUM_RESULT,NO_INT);
-	            break;
-	         }
-	    }//end elevator switch case
+		{
+				case FLC_ELEV_PITCH:
+					{
+						//g_PIDS[PID_pitch].desired = 0.0;
+						g_PIDS[PID_pitch].desired = g_cmd_stack.desired_pitch;
+						saturate_cmd(&g_PIDS[PID_pitch].desired,&ram_UAV_limits[UL_THETA_UPPER_LIMIT],&ram_UAV_limits[UL_THETA_LOWER_LIMIT]);
+						PID_calculate(&g_PIDS[PID_pitch],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						break;
+					}
+				case FLC_ELEV_PITCH_RATE:
+					{
+						g_PIDS[PID_pitch_rate].desired = 0.0;
+						PID_calculate(&g_PIDS[PID_pitch_rate],INVERT_RESULT,NO_SUM_RESULT,NO_INT);
+						break;
+					}
+				case FLC_ELEV_PITCH_PITCH_RATE:
+					{
+						g_PIDS[PID_pitch].desired = g_cmd_stack.desired_pitch;
+						saturate_cmd(&g_PIDS[PID_pitch].desired,&ram_UAV_limits[UL_THETA_UPPER_LIMIT],&ram_UAV_limits[UL_THETA_LOWER_LIMIT]);
+						PID_calculate(&g_PIDS[PID_pitch],INVERT_RESULT,NO_SUM_RESULT,ENABLE_INT);
+						g_PIDS[PID_pitch_rate].desired = 0.0;
+						PID_calculate(&g_PIDS[PID_pitch_rate],INVERT_RESULT,SUM_RESULT,NO_INT);
+						break;
+					}
+			}//end elevator switch case
 
 }//end low_level_control
 
@@ -141,97 +140,96 @@ root void PID_calculate(PID_loop *PIDloop, uint8 invert_result,uint8 sum_result,
 /*** EndHeader */
 root void PID_calculate(PID_loop *PIDloop, uint8 invert_result,uint8 sum_result, uint8 enable_integration)
 {
-    auto float d_error, d_alpha, tmp;
-    auto float tmp_i_ef;
-    auto float temp_i_limit;
-    auto float temp_err_limit;
+		auto float d_error, d_alpha, tmp;
+		auto float tmp_i_ef;
+		auto float temp_i_limit;
+		auto float temp_err_limit;
 
-    if(PIDloop->enable != TRUE)														// loop is off
-    	{
-	        PIDloop->local_effort = 0;
-	        PIDloop->d_effort = 0;
-	        PIDloop->i_effort = 0;
-	        return;
-	    }
+		if(PIDloop->enable != TRUE)														// loop is off
+			{
+				PIDloop->local_effort = 0;
+				PIDloop->d_effort = 0;
+				PIDloop->i_effort = 0;
+				return;
+			}
 
-    PIDloop->error =  PIDloop->desired - *(PIDloop->actual);
+		PIDloop->error =  PIDloop->desired - *(PIDloop->actual);
 
-    if(PIDloop->loop_id==PID_energy_height)
-    	{
-         PIDloop->error =  PIDloop->desired - *(PIDloop->actual);
-         temp_err_limit = -ram_UAV_limits[UL_EH_RANGE];
-    		saturate_cmd(&PIDloop->error,&ram_UAV_limits[UL_EH_RANGE],&temp_err_limit);
-      }
+		if(PIDloop->loop_id==PID_energy_height)
+			{
+				PIDloop->error =  PIDloop->desired - *(PIDloop->actual);
+				temp_err_limit = -ram_UAV_limits[UL_EH_RANGE];
+				saturate_cmd(&PIDloop->error,&ram_UAV_limits[UL_EH_RANGE],&temp_err_limit);
+			}
 
-    if(PIDloop->loop_id == PID_heading)										// unwrap heading
-        {
-        		unwrap_angle(&PIDloop->error);
-
-        }
-
-
-    // Proportional
-    PIDloop->p_effort = PIDloop->error * PIDloop->kp;
-
-    // Integregal
-    if(fabs(PIDloop->local_effort) < PIDloop->effort_limit)
-    	{
-        PIDloop->i_effort += PIDloop->error*m_floats[MF_DT]*PIDloop->ki;
-        if(PIDloop->loop_id==PID_heading)
-            m_floats[MF_NAV_PHI_BIAS]= PIDloop->i_effort;
-      }
-    temp_i_limit = -PIDloop->integral_limit;
-    saturate_cmd(&PIDloop->i_effort,&PIDloop->integral_limit,&temp_i_limit);
+		if(PIDloop->loop_id == PID_heading)										// unwrap heading
+				{
+						unwrap_angle(&PIDloop->error);
+				}
 
 
-    if(PIDloop->ki==0 || !enable_integration)
-        PIDloop->i_effort = 0;
+		// Proportional
+		PIDloop->p_effort = PIDloop->error * PIDloop->kp;
 
-    // Derivate
-    tmp = m_floats[MF_DT] * ram_UAV_limits[UL_PID_DERIVE_CORNER_FREQ];		// find alpha value from corner freq.
-    d_alpha = tmp/(1+tmp);
-
-    PIDloop->LPF_error = d_alpha*PIDloop->error + (1-d_alpha)*PIDloop->LPF_error;
-    d_error = PIDloop->LPF_error-PIDloop->LPF_error_old;
-
-    if(PIDloop->loop_id == PID_heading)										// unwrap heading
-        {
-        		unwrap_angle(&d_error);
-        }
-
-    if(fabs(m_floats[MF_DT]) == 0)
-        PIDloop->d_effort = 0;
-    else
-        PIDloop->d_effort = d_error*PIDloop->kd/m_floats[MF_DT];
-
-    PIDloop->local_effort = PIDloop->p_effort + PIDloop->d_effort + PIDloop->i_effort;
-
-    if(PIDloop->local_effort < -(PIDloop->effort_limit))
-    	{
-	       PIDloop->local_effort = -(PIDloop->effort_limit);
-	   }
-    if(PIDloop->local_effort > PIDloop->effort_limit)
-    	{
-	       PIDloop->local_effort = PIDloop->effort_limit;
-	   }
-
-    if(invert_result == INVERT_RESULT)
-    	{
-        PIDloop->local_effort *= -1;
-      }
-
-    if((PIDloop->loop_id == PID_heading) && (ram_UAV_limits[UL_PSIDOT_CTRL] == 1.0))										// unwrap heading
-   	{
-         PIDloop->local_effort = atan((PIDloop->local_effort * m_floats[MF_GPS_SPEED])/GRAVITY);
-      }
-
-    if(sum_result)
-        *PIDloop->effort += PIDloop->local_effort; //PIDloop->effort is a pointer to servo etc
-    else
-        *PIDloop->effort  = PIDloop->local_effort;
+		// Integregal
+		if(fabs(PIDloop->local_effort) < PIDloop->effort_limit)
+			{
+				PIDloop->i_effort += PIDloop->error*m_floats[MF_DT]*PIDloop->ki;
+				if(PIDloop->loop_id==PID_heading)
+					m_floats[MF_NAV_PHI_BIAS]= PIDloop->i_effort;
+			}
+		temp_i_limit = -PIDloop->integral_limit;
+		saturate_cmd(&PIDloop->i_effort,&PIDloop->integral_limit,&temp_i_limit);
 
 
-    PIDloop->LPF_error_old = PIDloop->LPF_error;									// update history
+		if(PIDloop->ki==0 || !enable_integration)
+			PIDloop->i_effort = 0;
+
+		// Derivate
+		tmp = m_floats[MF_DT] * ram_UAV_limits[UL_PID_DERIVE_CORNER_FREQ];		// find alpha value from corner freq.
+		d_alpha = tmp/(1+tmp);
+
+		PIDloop->LPF_error = d_alpha*PIDloop->error + (1-d_alpha)*PIDloop->LPF_error;
+		d_error = PIDloop->LPF_error-PIDloop->LPF_error_old;
+
+		if(PIDloop->loop_id == PID_heading)										// unwrap heading
+			{
+				unwrap_angle(&d_error);
+			}
+
+		if(fabs(m_floats[MF_DT]) == 0)
+			PIDloop->d_effort = 0;
+		else
+			PIDloop->d_effort = d_error*PIDloop->kd/m_floats[MF_DT];
+
+		PIDloop->local_effort = PIDloop->p_effort + PIDloop->d_effort + PIDloop->i_effort;
+
+		if(PIDloop->local_effort < -(PIDloop->effort_limit))
+			{
+				PIDloop->local_effort = -(PIDloop->effort_limit);
+			}
+		if(PIDloop->local_effort > PIDloop->effort_limit)
+			{
+				PIDloop->local_effort = PIDloop->effort_limit;
+			}
+
+		if(invert_result == INVERT_RESULT)
+			{
+				PIDloop->local_effort *= -1;
+			}
+
+		if((PIDloop->loop_id == PID_heading) && (ram_UAV_limits[UL_PSIDOT_CTRL] == 1.0))										// unwrap heading
+			{
+				PIDloop->local_effort = atan((PIDloop->local_effort * m_floats[MF_GPS_SPEED])/GRAVITY);
+			}
+
+		if(sum_result)
+			*PIDloop->effort += PIDloop->local_effort; //PIDloop->effort is a pointer to servo etc
+		else
+			*PIDloop->effort  = PIDloop->local_effort;
+
+
+		PIDloop->LPF_error_old = PIDloop->LPF_error;									// update history
 
 }//end PID_calculate()
 
@@ -242,26 +240,26 @@ xmem void PID_init(PID_loop* PIDloop, float* actual_ptr, float* effort_ptr,float
 /*** EndHeader */
 xmem void PID_init(PID_loop* PIDloop, float* actual_ptr, float* effort_ptr,float d_LPF_corner_freq)
 {
-    auto float temp_float[7];
+		auto float temp_float[7];
 
-    readUserBlock(temp_float, FL_INDEX_PID_START +((PIDloop->loop_id)*sizeof(temp_float)), sizeof(temp_float));
+		readUserBlock(temp_float, FL_INDEX_PID_START +((PIDloop->loop_id)*sizeof(temp_float)), sizeof(temp_float));
 
-    PIDloop->kp				= temp_float[0];
-    PIDloop->kd				= temp_float[1];
-    PIDloop->ki				= temp_float[2];
-    PIDloop->effort_limit	= temp_float[3];
-    PIDloop->integral_limit= temp_float[4];
-    PIDloop->desired			= temp_float[5];
-    PIDloop->loop_id			= (char)temp_float[6];
+		PIDloop->kp				= temp_float[0];
+		PIDloop->kd				= temp_float[1];
+		PIDloop->ki				= temp_float[2];
+		PIDloop->effort_limit	= temp_float[3];
+		PIDloop->integral_limit= temp_float[4];
+		PIDloop->desired			= temp_float[5];
+		PIDloop->loop_id			= (char)temp_float[6];
 
-    PIDloop->d_LPF_corner_freq = d_LPF_corner_freq;
-    PIDloop->enable = 1;
+		PIDloop->d_LPF_corner_freq = d_LPF_corner_freq;
+		PIDloop->enable = 1;
 
-    PIDloop->actual = actual_ptr;
-    PIDloop->effort = effort_ptr;
-    PIDloop->LPF_error = 0;
-    PIDloop->LPF_error_old = 0;
-    PIDloop->local_effort = 0;
+		PIDloop->actual = actual_ptr;
+		PIDloop->effort = effort_ptr;
+		PIDloop->LPF_error = 0;
+		PIDloop->LPF_error_old = 0;
+		PIDloop->local_effort = 0;
 }//end PID_init
 
 //*** BeginHeader saturate_cmd */
@@ -269,13 +267,13 @@ void saturate_cmd(float* cmd, float* upper_limit, float* lower_limit);
 //*** EndHeader */
 void saturate_cmd(float* cmd, float* upper_limit, float* lower_limit)
 {
-   if (*cmd > *upper_limit)
-   	{
-        memcpy(cmd,upper_limit,4);
-      }
-   if (*cmd < *lower_limit)
-   	{
-        memcpy(cmd,lower_limit,4);
-      }
+	if (*cmd > *upper_limit)
+		{
+				memcpy(cmd,upper_limit,4);
+			}
+	if (*cmd < *lower_limit)
+		{
+				memcpy(cmd,lower_limit,4);
+			}
 
 }//end saturate_cmd

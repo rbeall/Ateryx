@@ -4,11 +4,11 @@ scofunc void cof_sd_logger();
 nodebug
 scofunc void cof_sd_logger()
 {
-   auto long cur_rtc;
-   static long old_rtc;
-   auto float time_since_main_loop_start;
+	auto long cur_rtc;
+	static long old_rtc;
+	auto float time_since_main_loop_start;
 
-   char sd_cmd_str[15];
+	char sd_cmd_str[15];
 	char buffer[512];
 	char stack[64];
 	char ack[1];
@@ -16,109 +16,107 @@ scofunc void cof_sd_logger()
 	int buffer_length;
 	int i;
 
-   waitfor(DelayMs(200));   //log data at 5Hz
+	waitfor(DelayMs(200));   //log data at 5Hz
 
-   while(1)
-    {
-        cur_rtc = MS_TIMER;
-        time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
-        if(time_since_main_loop_start < COF_SD_LOGGER_TIME_SLOT)
-            break;
-        else
-            yield;
-    }
-   old_rtc = MS_TIMER;
+	while(1)
+		{
+			cur_rtc = MS_TIMER;
+			time_since_main_loop_start = (float)(cur_rtc - g_main_loop_start_time)*10e-4;
+			if(time_since_main_loop_start < COF_SD_LOGGER_TIME_SLOT)
+				break;
+			else
+				yield;
+		}
+	old_rtc = MS_TIMER;
 
-   memset(buffer,  0, sizeof(buffer));
+	memset(buffer,  0, sizeof(buffer));
 
-   if (sensors[TEMP_R].calibrated > 78.0)
-   	{
-	   	paledon(GPS_led);
-	      MsDelay(100);
-	      paledoff(GPS_led);
-	   };
+	if (sensors[TEMP_R].calibrated > 78.0)
+		{
+			paledon(GPS_led);
+				MsDelay(100);
+				paledoff(GPS_led);
+		};
 
-               flttoa(sensors[GYRO_P].raw_filt,stack,4);
-      					strcpy(buffer,stack);
-      	      flttoa(sensors[TEMP_P].calibrated,stack,4);
-               	   strcat(buffer," ");       //copies a space inbetween vars
-	                  strcat(buffer,stack);
-               flttoa(sensors[GYRO_Q].raw_filt,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
-               flttoa(sensors[TEMP_Q].calibrated,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
-               flttoa(sensors[GYRO_R].raw_filt,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
-               flttoa(sensors[TEMP_R].calibrated,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
+	flttoa(sensors[GYRO_P].raw_filt,stack,4);
+	strcpy(buffer,stack);
+	flttoa(sensors[TEMP_P].calibrated,stack,4);
+	strcat(buffer," ");       //copies a space inbetween vars
+	strcat(buffer,stack);
+	flttoa(sensors[GYRO_Q].raw_filt,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
+	flttoa(sensors[TEMP_Q].calibrated,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
+	flttoa(sensors[GYRO_R].raw_filt,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
+	flttoa(sensors[TEMP_R].calibrated,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
 
-               flttoa(sensors[ABSPRES].raw_filt,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
-               flttoa(sensors[DIFPRES].raw_filt,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
+	flttoa(sensors[ABSPRES].raw_filt,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
+	flttoa(sensors[DIFPRES].raw_filt,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
 
-               flttoa(sensors[ACCEL_X].raw_filt,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
-               flttoa(sensors[ACCEL_Y].raw_filt,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
-               flttoa(sensors[ACCEL_Z].raw_filt,stack,4);
-               	   strcat(buffer," ");
-	                  strcat(buffer,stack);
+	flttoa(sensors[ACCEL_X].raw_filt,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
+	flttoa(sensors[ACCEL_Y].raw_filt,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
+	flttoa(sensors[ACCEL_Z].raw_filt,stack,4);
+	strcat(buffer," ");
+	strcat(buffer,stack);
 
-               strcat(buffer,"\r\n");
+	strcat(buffer,"\r\n");
 
-               buffer_length = strlen(buffer);
-               //printf("\r %d",buffer_length);
+	buffer_length = strlen(buffer);
+	//printf("\r %d",buffer_length);
 
-               if (buffer_length > 0xff)
-               	{
-                   	abort;
-               	}
+	if (buffer_length > 0xff)
+		{
+				abort;
+		}
 
-	              sd_cmd_str[0] = 0x40;    // cmd set to write data
-	              sd_cmd_str[1] = 0x74;
-	              sd_cmd_str[2] = 0x80;    // Handshaking=0, with Append
-	              sd_cmd_str[3] = 0x6C;    // L
-	              sd_cmd_str[4] = 0x6F;    // O
-	              sd_cmd_str[5] = 0x67;    // G
-	              sd_cmd_str[6] = 0x2E;    // .
-	              sd_cmd_str[7] = 0x74;    // T
-	              sd_cmd_str[8] = 0x78;    // X
-	              sd_cmd_str[9] = 0x74;    // T
-	              sd_cmd_str[10] = 0x00;   // close title with null
-	              sd_cmd_str[11] = 0x00;   // length data (4 bytes big endian)
-	              sd_cmd_str[12] = 0x00;
-	              sd_cmd_str[13] = 0x00;   // have to back fill here etc if > 256 0xFF
-	              sd_cmd_str[14] = buffer_length;  // doesn't work if data is > 256 0xFF
+	sd_cmd_str[0] = 0x40;    // cmd set to write data
+	sd_cmd_str[1] = 0x74;
+	sd_cmd_str[2] = 0x80;    // Handshaking=0, with Append
+	sd_cmd_str[3] = 0x6C;    // L
+	sd_cmd_str[4] = 0x6F;    // O
+	sd_cmd_str[5] = 0x67;    // G
+	sd_cmd_str[6] = 0x2E;    // .
+	sd_cmd_str[7] = 0x74;    // T
+	sd_cmd_str[8] = 0x78;    // X
+	sd_cmd_str[9] = 0x74;    // T
+	sd_cmd_str[10] = 0x00;   // close title with null
+	sd_cmd_str[11] = 0x00;   // length data (4 bytes big endian)
+	sd_cmd_str[12] = 0x00;
+	sd_cmd_str[13] = 0x00;   // have to back fill here etc if > 256 0xFF
+	sd_cmd_str[14] = buffer_length;  // doesn't work if data is > 256 0xFF
 
 
-	            serEwrite(sd_cmd_str,15);
-	            wfd ack[0] = cof_serEgetc();
-	              serErdFlush();
+	serEwrite(sd_cmd_str,15);
+	wfd ack[0] = cof_serEgetc();
+	serErdFlush();
 
-	               if (ack[0] == 0x06)
-	                  {
-	                     ack[0] == 0x00;
+	if (ack[0] == 0x06)
+			{
+				ack[0] == 0x00;
+				serEwrite(buffer,buffer_length);    //write stack
+			}//end if
 
-	                     serEwrite(buffer,buffer_length);    //write stack
-
-	                  }//end if
-
-	               if (ack[0] == 0x15)
-	                  {
-	                     waitfor(IntervalMs(5));
-	                     ack[0] = 0x00;
-	                     abort;
-	                  }
-	                else abort;
+	if (ack[0] == 0x15)
+			{
+				waitfor(IntervalMs(5));
+				ack[0] = 0x00;
+				abort;
+			}
+		else abort;
 }//end cof_sd_logger
 
 /*** BeginHeader init_datalogger */
@@ -127,40 +125,39 @@ void init_datalogger(void);
 
 void init_datalogger(void)
 {
-  int cntr;
-  char ack[1];
-  char sd_logger_init[1];
+	int cntr;
+	char ack[1];
+	char sd_logger_init[1];
 
-  cntr = 30;
-  ack[0] = 0x00;
-  sd_logger_init[0] = 0x55;
-
-
-            while(cntr!=31)
-               	{
-                  	if (cntr == 30)
-	                    {
-	                     BitWrPortI(PFDR,&PFDRShadow,0,0);   //reset uDrive to sync
-	                     MsDelay(1);                         //active low
-	                     BitWrPortI(PFDR,&PFDRShadow,1,0);   //hold high again
-                        MsDelay(1000);
-
-                        cntr = 0;
-	                    }//end if
-
-	                  serEwrite(sd_logger_init,1);  //lock onto auto baud
-                     MsDelay(1);
-                     ack[0] = serEgetc();
-	                  serErdFlush();
+	cntr = 30;
+	ack[0] = 0x00;
+	sd_logger_init[0] = 0x55;
 
 
-	                  if (ack[0] == 0x06)
-	                     {
-                           cntr = 30;
-                        }//end if
-               	      cntr = cntr +1;
+						while(cntr!=31)
+								{
+										if (cntr == 30)
+											{
+											BitWrPortI(PFDR,&PFDRShadow,0,0);   //reset uDrive to sync
+											MsDelay(1);                         //active low
+											BitWrPortI(PFDR,&PFDRShadow,1,0);   //hold high again
+												MsDelay(1000);
 
-                    }//end while
+												cntr = 0;
+											}//end if
+
+										serEwrite(sd_logger_init,1);  //lock onto auto baud
+										MsDelay(1);
+										ack[0] = serEgetc();
+										serErdFlush();
+
+
+										if (ack[0] == 0x06)
+											{
+													cntr = 30;
+												}//end if
+											cntr = cntr +1;
+
+										}//end while
 
 }//end init_datalogger()
-
